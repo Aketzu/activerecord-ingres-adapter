@@ -1,0 +1,513 @@
+
+Ingres Corporation
+
+
+
+IInnggrreess RRuubbyy AAccttiivvee RReeccoorrdd AAddaapptteerr//DDrriivveerr VVeerrssiioonn 11..22..22
+
+-------------------------------------------------------------------------------
+_11_.._00_ _WW_ee_ll_cc_oo_mm_ee
+_22_.._00_ _OO_vv_ee_rr_vv_ii_ee_ww
+_2_._1_ _N_e_w_ _i_n_ _T_h_i_s_ _R_e_l_e_a_s_e
+_33_.._00_ _OO_pp_ee_rr_aa_tt_ii_nn_gg_ _SS_yy_ss_tt_ee_mm_ _SS_uu_pp_pp_oo_rr_tt
+_44_.._00_ _II_nn_ss_tt_aa_ll_ll_aa_tt_ii_oo_nn_ _CC_oo_nn_ss_ii_dd_ee_rr_aa_tt_ii_oo_nn_ss
+_55_.._00_ _GG_ee_nn_ee_rr_aa_ll_ _CC_oo_nn_ss_ii_dd_ee_rr_aa_tt_ii_oo_nn_ss
+_5_._1_ _F_e_a_t_u_r_e_s_ _N_o_t_ _I_n_c_l_u_d_e_d
+_5_._2_ _S_y_n_t_a_x_ _f_o_r_ _t_h_e_ _I_n_g_r_e_s_ _A_R_ _A_d_a_p_t_e_r
+_5_._3_ _S_y_n_t_a_x_ _f_o_r_ _t_h_e_ _I_n_g_r_e_s_ _R_u_b_y_ _D_r_i_v_e_r
+_66_.._00_ _BB_uu_ii_ll_dd_ii_nn_gg_ _aa_nn_dd_ _II_nn_ss_tt_aa_ll_ll_ii_nn_gg_ _tt_hh_ee_ _II_nn_gg_rr_ee_ss_ _RR_uu_bb_yy_ _AA_RR_ _AA_dd_aa_pp_tt_ee_rr_//_DD_rr_ii_vv_ee_rr
+_6_._1_ _I_n_g_r_e_s_ _A_R_ _A_d_a_p_t_e_r
+_6_._2_ _I_n_g_r_e_s_ _R_u_b_y_ _D_r_i_v_e_r
+_77_.._00_ _EE_xx_aa_mm_pp_ll_ee_ _CC_oo_dd_ee
+_7_._1_ _E_x_a_m_p_l_e_ _1_:_ _R_a_i_l_s_ _C_o_o_k_b_o_o_k_ _T_u_t_o_r_i_a_l_ _(_W_e_b_ _A_p_p_l_i_c_a_t_i_o_n_)_ _U_s_i_n_g_ _I_n_g_r_e_s_ _A_R
+_A_d_a_p_t_e_r
+_7_._2_ _E_x_a_m_p_l_e_ _2_:_ _I_R_B_ _(_I_n_t_e_r_a_c_t_i_v_e_ _R_u_b_y_)_ _U_s_i_n_g_ _I_n_g_r_e_s_ _R_u_b_y_ _D_r_i_v_e_r_ _O_n_l_y_ _(_W_i_t_h_o_u_t_ _A_R
+_A_d_a_p_t_e_r_)
+_7_._3_ _E_x_a_m_p_l_e_ _3_:_ _R_u_b_y_ _P_r_o_g_r_a_m_ _U_s_i_n_g_ _I_n_g_r_e_s_ _R_u_b_y_ _D_r_i_v_e_r_ _O_n_l_y_ _(_W_i_t_h_o_u_t_ _A_R_ _A_d_a_p_t_e_r_)
+_7_._4_ _E_x_a_m_p_l_e_ _4_:_ _I_n_g_r_e_s_ _F_l_i_g_h_t_ _P_l_a_n_n_e_r_ _D_e_m_o_ _U_s_i_n_g_ _I_n_g_r_e_s_ _R_u_b_y_ _D_r_i_v_e_r_ _O_n_l_y_ 
+_(_W_i_t_h_o_u_t_ _A_R_ _A_d_a_p_t_e_r_)
+_88_.._00_ _KK_nn_oo_ww_nn_ _II_ss_ss_uu_ee_ss
+_99_.._00_ _CC_oo_nn_tt_aa_cc_tt_ _TT_ee_cc_hh_nn_ii_cc_aa_ll_ _SS_uu_pp_pp_oo_rr_tt
+-------------------------------------------------------------------------------
+
+11..00 WWeellccoommee
+
+This readme contains all of the documentation on the Ingres Ruby Active Record
+(AR) adapter and driver. AR is the standard database access interface used by
+Ruby on Rails (ROR or Rails) applications.
+Please review this readme before building or installing this software. We
+encourage users to test the software and provide feedback.
+-------------------------------------------------------------------------------
+
+22..00 OOvveerrvviieeww
+
+There are two components to the Ingres support for Ruby:
+
+* Ingres Active Record adapter
+* Ingres Ruby driver
+
+Both components are required for Rails applications using Active Record (AR),
+which is the standard Rails Object-to-Relations Mapping (ORM) interface. The
+adapter implements the AR classes for Ingres; internally, it invokes the
+classes and methods in the driver to actually communicate with Ingres.
+The driver, while primarily intended to service the adapter, can also be
+invoked directly from any Ruby program to communicate with Ingres. The driver
+interface does not follow any industry standard and may change in the future,
+if required.
+To summarize, the AR interface provides an object interface while the driver
+interface is a more direct SQL-level interface.
+-------------------------------------------------------------------------------
+
+22..11 NNeeww iinn TThhiiss RReelleeaassee
+
+This is a minor release that addresses the following issues:
+
+* Fix quote() in ingres_adapater.rb to use the class of variable rather than
+  the equivalent Ingres column type.
+* Fix segvio in Ingres Ruby driver when fetching char/varchar with data longer
+  than 4074 bytes.
+
+The following files have been added to keep a track of the changes made and the
+work still to be done:
+
+* CHANGELOG
+* TODO
+
+-------------------------------------------------------------------------------
+
+33..00 OOppeerraattiinngg SSyysstteemm SSuuppppoorrtt
+
+This Ingres Ruby Active Record adapter/driver supports all of the platforms
+supported by Ingres, including:
+
+* Solaris
+* HP-UX
+* AIX
+* Linux
+* Windows
+
+-------------------------------------------------------------------------------
+
+44..00 IInnssttaallllaattiioonn CCoonnssiiddeerraattiioonnss
+
+To build and install the Ingres Ruby interface, the following components are
+required:
+
+* Ingres 2.6 or above. At a minimum, an Ingres client installation is required
+  on the same machine as the Ruby installation. For a list of Ingres binary and
+  source downloads, see _h_t_t_p_:_/_/_w_w_w_._i_n_g_r_e_s_._c_o_m.
+* Ruby, preferably at version 1.8.5 or later. Additional Ruby components or
+  related products (such as Active Record or Rails) may also be required
+  depending on how Ruby will be used with Ingres. See below for details.
+* C compiler (for example, GNU/C on Linux and UNIX, or Microsoft Visual Studio
+  6 on Windows). The C compiler is not needed if using a pre-built version of
+  the Ingres Ruby driver.
+  NNoottee:: Ruby does not yet support building on later versions of Microsoft
+  Visual Studio.
+* The Ingres Ruby AR adapter source code and driver binary. The source code for
+  the driver is also needed if not using the pre-built binary.
+
+-------------------------------------------------------------------------------
+
+55..00 GGeenneerraall CCoonnssiiddeerraattiioonnss
+
+-------------------------------------------------------------------------------
+
+55..11 FFeeaattuurreess NNoott IInncclluuddeedd
+
+The following features are currently not included in the Ingres Open Source
+Ruby interface (also see the Known Issues section):
+
+* Only one Ingres connection at a time is supported from an application.
+* Data types not supported are: float4, float8, money, bigint, decimal, and
+  ANSI date/time/timestamp.
+
+-------------------------------------------------------------------------------
+
+55..22 SSyynnttaaxx ffoorr tthhee IInnggrreess AARR AAddaapptteerr
+
+See Ruby Active Record documentation: _h_t_t_p_:_/_/_a_r_._r_u_b_y_o_n_r_a_i_l_s_._c_o_m_/.
+-------------------------------------------------------------------------------
+
+55..33 SSyynnttaaxx ffoorr tthhee IInnggrreess RRuubbyy DDrriivveerr
+
+NNoottee:: We do not recommend that production applications use this API since it is
+intended for the Ingres AR adapter. The API may change in the future. It is,
+however, useful for testing Ingres connectivity and functionality.
+Ruby program must have a “require 'Ingres'” statement to load in driver
+file.
+CCrreeaattee IInnggrreess ccllaassss oobbjjeecctt::
+
+  object_instance_name=Ingres.new
+
+MMeetthhooddss ((bbyy ccaatteeggoorryy))::
+CCoonnnneecctt ttoo ddaattaabbaassee::
+
+  connect(database_name)
+
+  connect_with_credentials(database_name, user, password)
+
+DDiissccoonnnneecctt ffrroomm ddaattaabbaassee::
+
+  disconnect()
+
+EExxeeccuuttee SSQQLL qquueerriieess aanndd ttrraannssaaccttiioonnaall ssttaatteemmeennttss::
+
+  execute(sql)
+
+(Alias for “execute” is “exec”.)
+For SQL queries or database procedure calls that contain parameters, use the
+pexecute() method in one of the following formats.
+For selects, inserts, deletes, and updates:
+
+  pexecute(sql [ [, param_type, param_value ] … ] )
+
+For database procedure calls:
+
+  pexecute(“{ <call> | <execute procedure> procedure_name [
+  (column_name = ? [ [ , column_name = ? ] … ] ) ] }” [ [ , column_name,
+  param_type, param_value ] … ] )
+
+where parameters in the sql text are represented by question marks (?) and
+there is one set of param_type/param_value entries for each one.
+param_type must be one of the following single characters:
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+|_'_b_'_|_b_y_t_e_ _ _ _ _ _ _ _ |
+|_'_B_'_|_l_o_n_g_ _b_y_t_e_ _ _ |
+|_'_c_'_|_c_h_a_r_ _ _ _ _ _ _ _ |
+|_'_d_'_|_d_a_t_e_,_ _ _ _ _ _ _ |
+|_'_D_'_|_d_e_c_i_m_a_l_ _ _ _ _ |
+|_'_f_'_|_f_l_o_a_t_ _ _ _ _ _ _ |
+|_'_i_'_|_i_n_t_e_g_e_r_ _ _ _ _ |
+|_'_n_'_|_n_c_h_a_r_ _ _ _ _ _ _ |
+|_'_N_'_|_n_v_a_r_c_h_a_r_ _ _ _ |
+|_'_t_'_|_t_e_x_t_ _ _ _ _ _ _ _ |
+|_'_T_'_|_l_o_n_g_ _t_e_x_t_ _ _ |
+|_'_v_'_|_v_a_r_c_h_a_r_ _ _ _ _ |
+|_'_V_'_|_l_o_n_g_ _v_a_r_c_h_a_r|
+
+param_value should correspond to the type.
+Both methods return a result set consisting of an array of rows, each of which
+is in turn an array of the columns within the row. For example:
+
+  ing.pexecute("select * from t1 where f1 = ?", 'i', 2)
+
+RReessuulltt SSeett MMeettaaddaattaa::
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+|_r_o_w_s___a_f_f_e_c_t_e_d_(_)_ _ _ _ _ _ _ _|_R_e_t_u_r_n_s_ _t_h_e_ _n_u_m_b_e_r_ _o_f_ _r_o_w_s_ _a_f_f_e_c_t_e_d_ _b_y_ _l_a_s_t_ _e_x_e_c_u_t_e_(_)|
+|_c_o_l_u_m_n___l_i_s_t___o_f___n_a_m_e_s_(_)_|_R_e_t_u_r_n_s_ _t_h_e_ _n_a_m_e_s_ _o_f_ _t_h_e_ _c_o_l_u_m_n_s_ _i_n_ _t_h_e_ _r_e_s_u_l_t_ _s_e_t_ _ _ |
+|data_types()          |Returns the data types of the columns in the result  |
+|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|_s_e_t_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ |
+|data_sizes()          |Returns the data lengths of the columns in the result|
+|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|_s_e_t_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ |
+
+DDaattaabbaassee MMeettaaddaattaa::
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+|_c_u_r_r_e_n_t___d_a_t_a_b_a_s_e_(_)_|_R_e_t_u_r_n_s_ _n_a_m_e_ _o_f_ _t_h_e_ _c_u_r_r_e_n_t_ _d_a_t_a_b_a_s_e_ _c_o_n_n_e_c_t_e_d_ _t_o_ |
+|_t_a_b_l_e_s_(_)_ _ _ _ _ _ _ _ _ _ _|_R_e_t_u_r_n_s_ _l_i_s_t_ _o_f_ _a_l_l_ _t_a_b_l_e_s_ _i_n_ _t_h_e_ _c_u_r_r_e_n_t_ _d_a_t_a_b_a_s_e|
+
+MMiisscceellllaanneeoouuss::
+To turn trace debugging on or off:
+
+  set_debug_flag(flag, flag_value)
+
+where
+flag is one of following: GLOBAL_DEBUG, DEBUG_TRANSACTIONS, DEBUG_SQL,
+DEBUG_TERMINATION.
+flag_value is TRUE or FALSE.
+-------------------------------------------------------------------------------
+
+66..00 BBuuiillddiinngg aanndd IInnssttaalllliinngg tthhee IInnggrreess RRuubbyy AARR AAddaapptteerr//DDrriivveerr
+
+-------------------------------------------------------------------------------
+
+66..11 IInnggrreess AARR AAddaapptteerr
+
+At a minimum, Ruby's Active Record must be installed. If running Rails, this
+will already exist as part of the Rails installation. For non-Rails users, AR
+may come with Ruby or may be installed separately as a Ruby “gem” into the
+Ruby installation.
+There are several steps required to install the Ingres AR adapter into the Ruby
+AR installation.
+NNoottee:: If only using the Ingres Ruby driver interface (not AR), installation of
+the adapter can be skipped and you can go directly to installation of the
+driver below.
+Typically, the base path of the AR installation will be similar to the
+following and will be referred to hereafter in this documentation as AR_BASE
+(where the last digits in the path refer to the AR version):
+UUNNIIXX//LLiinnuuxx:: /usr/local/lib/ruby/gems/1.8/gems/activerecord-1.14.2
+WWiinnddoowwss:: C:\ruby\lib\ruby\gems\1.8\gems\activerecord-1.15.3
+TToo iinnssttaallll tthhee IInnggrreess AARR aaddaapptteerr iinnttoo tthhee RRuubbyy AARR iinnssttaallllaattiioonn
+
+  1. Copy the adapter file, iinnggrreess__aaddaapptteerr..rrbb, to the AR_BASE/lib/active-
+     record/connection_adapters directory.
+  2. Add Ingres as a valid database to AR. Edit active_record.rb file in
+     AR_BASE/lib by adding “ingres” to the end of a line that looks like:
+
+       RAILS_CONNECTION_ADAPTERS = %w( mysql postgresql sqlite firebird
+       sqlserver db2 oracle sybase openbase iinnggrreess )
+
+  3. Set up database connection information. Create a new directory called
+     nnaattiivvee__iinnggrreess under the AR_BASE/test/connections directory. Copy and edit
+     the sample ccoonnnneeccttiioonn..rrbb file to define database name, user ID, password
+     information.
+  4. Set II_DATE_FORMAT to SWEDEN. Either set this as an OS environment
+     variable in your RAILS application environment or as an Ingres variable
+     (with the ingsetenv command). This restriction will be removed in the
+     future. Also, code in the adapter file, if uncommented (scan for SWEDEN),
+     may allow successful processing without setting II_DATE_FORMAT.
+  5. For each Rails application accessing Ingres, edit the ddaattaabbaassee..yymmll file in
+     the application's config folder to specify the Ingres adapter plus
+     database and user information. The following is a sample entry for a local
+     Ingres database connection named my_rails_app_development:
+
+       development:
+           adapter: ingres
+           database: my_rails_app_development
+           username: ingres
+           password: ingres
+           host: localhost
+
+     For remote connections, change database and host to Ingres remote
+     connection format in either “vnode::databasename” where vnode is a
+     name configured in the Ingres Network Utility or a dynamic vnode in
+     @host,protocol,port[user,pwd]” format. For details, see the Ingres
+     Connectivity Guide.
+
+-------------------------------------------------------------------------------
+
+66..22 IInnggrreess RRuubbyy DDrriivveerr
+
+A binary version of the driver is provided for Windows (Ingres.so). If using
+the provided binary, skip to the iinnssttaallll step below.
+The driver can also be built from the source provided (Ingres.c). To build and
+install the Ingres Ruby driver, the following components are needed AND MUST BE
+IN YOUR PATH:
+
+* Ingres installation
+* C compiler (for example, GNU/C on Linux and UNIX, or Microsoft Visual Studio
+  6 on Windows).
+
+TToo bbuuiilldd tthhee ddrriivveerr
+
+  1. Copy source Ingres.c and extconf.rb to your build directory (anywhere).
+  2. Create the makefile using the Ruby mkmf utility. Run the following command
+     after customizing it to your installation of Ingres:
+
+       ruby -r mkmf extconf.rb
+           --with-ingres-include='/opt/Ingres/IngresII/ingres/files/'
+           --with-ingres-lib='/opt/Ingres/IngresII/ingres/lib/'
+
+     A sample createMake.bat has been included for Windows. The utility mkmf
+     pulls configuration information from the extconf.rb file, which may need
+     slight library name changes for different versions of Ingres or operating
+     systems; see comments in extconf.rb file.
+     The output should look similar to the following:
+
+       bash-2.05$ ruby -r mkmf extconf.rb --with-ingres-include='/usr/ingres/
+       files/' --with-ingres-lib='/usr/ingres/lib'
+       checking for iiapi.h... yes
+       checking for main() in -lingres... yes
+       checking for main() in -lingres... yes
+       creating Makefile
+
+  3. Compile and link the driver. Type mmaakkee on Linux and UNIX or nnmmaakkee on
+     Windows. This should compile and link cleanly, creating output shared
+     library Ingres.so.
+
+     o On Windows, this is a DLL, but is nevertheless suffixed with “.so”
+       rather than “.dll”.
+     o On Windows, you can ignore warnings about the compiler and linker flags
+       being unknown options.
+     o On Windows with Ruby versions later than 1.8.5, the following error may
+       be seen on the link:
+
+         cannot open input file "msvcrt-ruby18.lib"
+
+       This can be resolved by removing the (lower case) “libpath =” line
+       in the makefile.
+
+
+TToo iinnssttaallll tthhee ddrriivveerr
+Type mmaakkee iinnssttaallll. (On Windows, type nnmmaakkee).
+Or, with the pre-built Windows binary, copy Ingres.so to Ruby i386-msvcrt
+directory, such as: c:\ruby\lib\ruby\site_ruby\1.8\i386-msvcrt.
+-------------------------------------------------------------------------------
+
+77..00 EExxaammppllee CCooddee
+
+-------------------------------------------------------------------------------
+
+77..11 EExxaammppllee 11:: RRaaiillss CCooookkbbooookk TTuuttoorriiaall ((WWeebb AApppplliiccaattiioonn)) UUssiinngg IInnggrreess AARR
+AAddaapptteerr
+
+A Cookbook Tutorial can be accessed from the Rails website (_h_t_t_p_:_/_/
+_r_u_b_y_o_n_r_a_i_l_s_._o_r_g_/ docs) under the Tutorials section. Selection Rolling with Ruby
+on Rails: Part I takes you to _h_t_t_p_:_/_/_w_w_w_._o_n_l_a_m_p_._c_o_m_/_p_u_b_/_a_/_o_n_l_a_m_p_/_2_0_0_6_/_1_2_/_1_4_/
+_r_e_v_i_s_i_t_i_n_g_-_r_u_b_y_-_o_n_-_r_a_i_l_s_-_r_e_v_i_s_i_t_e_d_._h_t_m_l. The demo referred to in the tutorial
+is installed as part of some of the prepackaged Ruby on Rails versions, such as
+InstantRails on Windows or Rails LiveCD on Linux.
+To run this demo in InstantRails, which is preconfigured to run against another
+database, do the following:
+
+  1. Install the Ingres Ruby AR adapter and driver into InstantRails per the
+     instructions above (InstantRails comes with its own version of Ruby and
+     Active Record).
+  2. Create the database in Ingres with schemas.
+
+       1. Create the database:
+
+            createdb cookbook_development
+
+       2. Create and populate the tables:
+
+            sql cookbook_development < cookbook_ingres.sql
+
+
+  3. Configure the application to use the Ingres ActiveRecord adapter.
+     Edit database.yml in ...\rails_apps\cookbook:
+
+       1. Change adapter from "mysql" to "ingres" in all (three) occurrences.
+       2. Update username and password as needed; for example, username:
+          ingres.
+       3. Edit database to be the full name of the database. Unlike MySql, the
+          _development, _test, _production suffixes are not automatically
+          added.
+
+  4. Start up systems (if not already started):
+
+       1. Start up Ingres (ingstart)
+       2. Start up Rails. For Instant Rails:
+
+            cd d:\InstantRails
+            use_ruby
+            cd ..
+            InstantRails
+
+       3. Start up Mongrel (web server)
+          If Mongrel is already up and app or even database.yml was changed,
+          you must restart Mongrel:
+          Shutdown with Control-C in Mongrel startup command window.
+
+            cd d:\InstantRails\rails_apps\cookbook
+            mongrel_rails start
+
+
+  5. Run application:
+     From web browser, set url=http://localhost:3000/category. You should get a
+     screen showing "Online Cookbook" at the top.
+
+-------------------------------------------------------------------------------
+
+77..22 EExxaammppllee 22:: IIRRBB ((IInntteerraaccttiivvee RRuubbyy)) UUssiinngg IInnggrreess RRuubbyy DDrriivveerr OOnnllyy ((WWiitthhoouutt AARR
+AAddaapptteerr))
+
+
+  >>>$ irb
+
+  irb(main):001:0> require 'Ingres'
+
+  => true
+
+  irb(main):002:0> i = Ingres.new
+
+  => #<Ingres:0xb7fba520>
+
+  irb(main):003:0> i.connect("activerecord_unittest")
+
+  => #<Ingres:0xb7fba520>
+
+  irb(main):006:0> sql="select * from developers"
+
+  => "select * from developers"
+
+  irb(main):007:0> result_set = i.execute(sql)
+
+  => [[5, "fixture_5", 100000, "NULL", "NULL"], [6, "fixture_6", 100000,
+  "NULL", "NULL"], [7,"fixture_7", 100000, "NULL", "NULL"], [11, "Jamis", 9000,
+  "NULL", "NULL"], [8, "fixture_8", 100000, "NULL", "NULL"], [9, "fixture_9",
+  100000, "NULL", "NULL"], [2, "Jamis", 150000, "NULL", "NULL"], [10,
+  "fixture_10", 100000, "NULL", "NULL"], [3, "fixture_3", 100000, "NULL",
+  "NULL"], [1, "David", 80000, "NULL", "NULL"], [4, "fixture_4", 100000,
+  "NULL", "NULL"]]
+
+-------------------------------------------------------------------------------
+
+77..33 EExxaammppllee 33:: RRuubbyy PPrrooggrraamm UUssiinngg IInnggrreess RRuubbyy DDrriivveerr OOnnllyy ((WWiitthhoouutt AARR AAddaapptteerr))
+
+
+  require "Ingres"
+  ing = Ingres.new
+  # You must connect to a database.
+  # Be sure you've created the database using "createdb".
+  ing.connect(some_database)
+  # you can also use:
+  # ing.connect_with_credentials( some_database, user_name, password)
+  sql = "select * from some_table"
+  result_set = ing.execute(sql)
+  # or
+  # result_set = ing.exec(sql)
+  # the result set is an array of arrays.
+  # you get one array for each row
+  # {{a,b,c}, {d,e,f}, etc}
+  # metadata is stored in these routines
+  # how many rows were touched by the last query
+  # usually an update
+  puts ing.rows_affected
+  # what's the current database (from the connect call)
+  puts ing.current_database
+  # the names of each column in the result set
+  puts ing.column_list_of_names
+  # the size of the data in each column
+  # this could be the length of a varchar or an int
+  puts ing.data_sizes
+  # what type is in each column
+  puts ing.data_types
+  # all the tables in the current database
+  puts ing.tables
+  # properly terminate your database connection
+  ing.disconnect
+
+-------------------------------------------------------------------------------
+
+77..44 EExxaammppllee 44:: IInnggrreess FFlliigghhtt PPllaannnneerr DDeemmoo UUssiinngg IInnggrreess RRuubbyy DDrriivveerr OOnnllyy
+((WWiitthhoouutt AARR AAddaapptteerr))
+
+If you would like to get a copy of this, please post a request on the Ingres
+Community Forum in the Database Drivers and APIs area.
+-------------------------------------------------------------------------------
+
+88..00 KKnnoowwnn IIssssuueess
+
+Known issues are as follows:
+
+* Errors (such as trying to read an unsupported data type) may leave connection
+  state in an unusable state, causing errors such as “The requested operaton
+  cannot be performed with active transactions.”
+* Driver will not build on later versions of Microsoft Visual Studio (2003 and
+  later). While this was a Ruby limitation and not a driver problem, it needs
+  to be resolved before MS VS 6 becomes obsolete.
+* The tables() method in the Ingres driver should only return user tables, but
+  also returns internal Ingres (catalog) tables (those beginning with
+  “ii”).
+* Driver compilation and linking issues a number of warnings.
+* Some Active Record Unit (regression) tests fail.
+* RDoc does not generate accurate or helpful documentation of the adapter and
+  driver.
+* Ingres II_DATE_FORMATs other than SWEDEN not supported.
+* Ingres driver current_database() returns the entire connection string for the
+  database, including “vnode::” and server type, if present.
+
+-------------------------------------------------------------------------------
+
+99..00 CCoonnttaacctt TTeecchhnniiccaall SSuuppppoorrtt
+
+As this product is still in alpha status, issues specific to the Ingres Ruby AR
+adapter and driver should be posted on the Ingres forum _h_t_t_p_:_/_/
+_c_o_m_m_u_n_i_t_y_._i_n_g_r_e_s_._c_o_m_/_f_o_r_u_m_s_/_i_n_d_e_x_._p_h_p_?_c_=_3 in the Database Driver and APIs forum
+rather than contacting Ingres Technical Support.
+For online technical assistance for other Ingres products or components, and a
+complete list of locations, primary service hours, and telephone numbers,
+contact technical support at _h_t_t_p_:_/_/_i_n_g_r_e_s_._c_o_m_/_s_u_p_p_o_r_t.
+-------------------------------------------------------------------------------
+Copyright © 2007 Ingres Corporation. All rights reserved.

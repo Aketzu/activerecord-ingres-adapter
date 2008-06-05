@@ -1,0 +1,16 @@
+version 1.2.2
+- Add an ascii README file for systems without access to a browser
+- Add TODO.txt show show areas that require attention
+- Add missing GPL header text to ingres_adapter.rb
+- Fix quote() in ingres_adapater.rb to use the class of variable rather than
+  the equivalent Ingres column type.
+- Fix segvio in Ingres Ruby driver when fetching char/varchar with data
+  longer than 4074 bytes.
+
+version 1.2.1
+- Initial release
+
+/*
+vim: ts=4 sw=4 expandtab
+$Id$
+*/
