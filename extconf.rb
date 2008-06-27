@@ -36,6 +36,7 @@ if have_header('iiapi.h')
         if ENV["II_SYSTEM"]
             libdir = ENV["II_SYSTEM"] + "/ingres/lib"
             $LDFLAGS += " -L#{libdir}"
+            $LDFLAGS += " -lq.1 -lcompat.1 -lframe.1 -lrt -liiapi.1"
         end
        
         if RUBY_PLATFORM =~ /solaris/

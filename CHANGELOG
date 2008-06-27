@@ -1,3 +1,7 @@
+SVN
+- Add support in ingres_adapter.rb for Rails migrations
+- Restrict tables() to non-system tables
+
 version 1.2.2
 - Add an ascii README file for systems without access to a browser
 - Add TODO.txt show show areas that require attention

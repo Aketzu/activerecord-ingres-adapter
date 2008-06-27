@@ -2960,7 +2960,7 @@ ii_tables (VALUE param_self)
   if (ii_globals.debug)
     printf ("Entering %s.\n", function_name);
 
-  sql_string = rb_str_new2 ("SELECT table_name FROM iitables");
+  sql_string = rb_str_new2 ("SELECT table_name FROM iitables WHERE table_type = 'T' AND table_name not like 'ii%'");
   GLOBAL_TABLE_LIST_QUERY_FLAG = TRUE;
   table_list = ii_execute (param_self, sql_string);
   GLOBAL_TABLE_LIST_QUERY_FLAG = FALSE;
