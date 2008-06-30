@@ -24,15 +24,20 @@
 **              12/18/06 (Jared Richardson)
 **                      Community developer provided original source 
 **                      for Ingres Corp to use as basis for Ruby driver
-**              02/21/07 (kenro01)
+**              02/21/07 (robert.kent@ingres.com)
 **                      General cleanup, removal of unused variables, etc,
 **                      replacement of trim function with Ingres version,
 **                      creation of debug flag setting function
-**              11/30/07 (lunbr01)
+**              11/30/07 (bruce.lunsford@ingres.com)
 **                      Fix Segvio when selecting char or varchar with data
 **                      longer than 4074 bytes (co_sizeAdvise + 2).  Also
 **                      improve performance on non-lob colunn fetches by
 **                      eliminating alloc/free on every column.
+**              06/17/08 (bruce.lunsford@ingres.com)
+**                      Add support for datatypes float4, float8, money,
+**                      decimal, bigint.  Removed unref'd processShortField().
+**                      Change INT2NUM->INT2FIX where feasible for performance.
+**                      Add support for Ingres ANSI date/time datatypes.
  */
 
 #include "ruby.h"
@@ -49,6 +54,9 @@ typedef unsigned char utf8;
 typedef short i2;
 typedef long i4;
 typedef unsigned short u_i2;
+#ifndef _WIN32
+typedef long long __int64;
+#endif
 
 #define UTF8				utf8
 #define UCS2				ucs2
@@ -363,7 +371,16 @@ init_globals ()
 # define IIAPI_FLT_TYPE     ((IIAPI_DT_ID) 31)
 # define IIAPI_MNY_TYPE     ((IIAPI_DT_ID)  5)
 # define IIAPI_DEC_TYPE     ((IIAPI_DT_ID) 10)
-# define IIAPI_DTE_TYPE     ((IIAPI_DT_ID)  3)
+# define IIAPI_DTE_TYPE     ((IIAPI_DT_ID)  3)  ** Ingres Date **
+# define IIAPI_DATE_TYPE    ((IIAPI_DT_ID)  4)  ** ANSI Date **
+# define IIAPI_TIME_TYPE    ((IIAPI_DT_ID)  8)
+# define IIAPI_TMWO_TYPE    ((IIAPI_DT_ID)  6)
+# define IIAPI_TMTZ_TYPE    ((IIAPI_DT_ID)  7)
+# define IIAPI_TS_TYPE      ((IIAPI_DT_ID) 19)
+# define IIAPI_TSWO_TYPE    ((IIAPI_DT_ID)  9)
+# define IIAPI_TSTZ_TYPE    ((IIAPI_DT_ID) 18)
+# define IIAPI_INTYM_TYPE   ((IIAPI_DT_ID) 33)
+# define IIAPI_INTDS_TYPE   ((IIAPI_DT_ID) 34)
 # define IIAPI_LOGKEY_TYPE  ((IIAPI_DT_ID) 11)
 # define IIAPI_TABKEY_TYPE  ((IIAPI_DT_ID) 12)
 */
@@ -387,6 +404,7 @@ getIngresDataTypeAsString (IIAPI_DT_ID param_dt_id)
     case IIAPI_CHA_TYPE:
     case IIAPI_NCHA_TYPE:
     case IIAPI_CHR_TYPE:
+    case IIAPI_DEC_TYPE:
       dataType = RUBY_STRING;
       break;
 
@@ -395,6 +413,7 @@ getIngresDataTypeAsString (IIAPI_DT_ID param_dt_id)
       break;
 
     case IIAPI_FLT_TYPE:
+    case IIAPI_MNY_TYPE:
       dataType = RUBY_DOUBLE;
       break;
 
@@ -412,6 +431,17 @@ getIngresDataTypeAsString (IIAPI_DT_ID param_dt_id)
       break;
 
     case IIAPI_DTE_TYPE:
+#ifdef IIAPI_DATE_TYPE
+    case IIAPI_DATE_TYPE:
+    case IIAPI_TIME_TYPE:
+    case IIAPI_TMWO_TYPE:
+    case IIAPI_TMTZ_TYPE:
+    case IIAPI_TS_TYPE:
+    case IIAPI_TSWO_TYPE:
+    case IIAPI_TSTZ_TYPE:
+    case IIAPI_INTYM_TYPE:
+    case IIAPI_INTDS_TYPE:
+#endif
       dataType = RUBY_DATE;
       break;
 
@@ -2053,7 +2083,7 @@ getRowsAffected ()
 
 
 VALUE
-processDateField (IIAPI_DATAVALUE * param_columnData)
+processDateField (IIAPI_DATAVALUE * param_columnData, int param_dataType)
 {
   VALUE returnValue;
   II_LONG paramvalue = IIAPI_EPV_DFRMT_ISO;
@@ -2068,15 +2098,15 @@ processDateField (IIAPI_DATAVALUE * param_columnData)
   dateStr = ii_allocate (dateStrLen + 1, sizeof (char));
 
   if (ii_globals.debug)
-    printf ("%s: Found a DATE field >>%s<<\n", function_name,
-	    param_columnData->dv_value);
+    printf ("%s: Found a DATE or TIME field of type %d >>%s<<\n", function_name,
+	    param_dataType, param_columnData->dv_value);
 
   setEnvPrmParm.se_envHandle = ii_globals.envHandle;
   setEnvPrmParm.se_paramID = IIAPI_EP_DATE_FORMAT;
   setEnvPrmParm.se_paramValue = (II_PTR) (&paramvalue);
   IIapi_setEnvParam (&setEnvPrmParm);
 
-  convertParm.cv_srcDesc.ds_dataType = IIAPI_DTE_TYPE;
+  convertParm.cv_srcDesc.ds_dataType = param_dataType;
   convertParm.cv_srcDesc.ds_nullable = FALSE;
   convertParm.cv_srcDesc.ds_length = param_columnData->dv_length;
   convertParm.cv_srcDesc.ds_precision = 0;
@@ -2104,7 +2134,7 @@ processDateField (IIAPI_DATAVALUE * param_columnData)
 
   dateStr[convertParm.cv_dstValue.dv_length] = '\0';
   if (ii_globals.debug)
-    printf ("%s: Converted the DATE field >>%s<< to the string >>%s<<\n",
+    printf ("%s: Converted the DATE/TIME field >>%s<< to the string >>%s<<\n",
 	    function_name, param_columnData->dv_value, dateStr);
 
   returnValue = rb_str_new (dateStr, convertParm.cv_dstValue.dv_length);
@@ -2117,6 +2147,84 @@ processDateField (IIAPI_DATAVALUE * param_columnData)
 
 
 VALUE
+processDecimalField (IIAPI_DATAVALUE * param_columnData, IIAPI_DESCRIPTOR * param_descrParm)
+{
+  VALUE returnValue;
+  IIAPI_CONVERTPARM convertParm;
+  int decimalStrLen = 42;
+  /* FIXME: use Ingres MAX_DECIMAL_LEN or something like that */
+  char decimalStr[42] = {0};
+  char function_name[] = "processDecimalField";
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  convertParm.cv_srcDesc.ds_dataType = IIAPI_DEC_TYPE;
+  convertParm.cv_srcDesc.ds_nullable = FALSE;
+  convertParm.cv_srcDesc.ds_length = param_descrParm->ds_length;
+  convertParm.cv_srcDesc.ds_precision = param_descrParm->ds_precision;
+  convertParm.cv_srcDesc.ds_scale = param_descrParm->ds_scale;
+  convertParm.cv_srcDesc.ds_columnType = IIAPI_COL_QPARM;
+  convertParm.cv_srcDesc.ds_columnName = NULL;
+
+  convertParm.cv_srcValue.dv_null = FALSE;
+  convertParm.cv_srcValue.dv_length = param_columnData->dv_length;
+  convertParm.cv_srcValue.dv_value = param_columnData->dv_value;
+
+  convertParm.cv_dstDesc.ds_dataType = IIAPI_VCH_TYPE;
+  convertParm.cv_dstDesc.ds_nullable = FALSE;
+  convertParm.cv_dstDesc.ds_length = decimalStrLen;
+  convertParm.cv_dstDesc.ds_precision = 0;
+  convertParm.cv_dstDesc.ds_scale = 0;
+  convertParm.cv_dstDesc.ds_columnType = IIAPI_COL_QPARM;
+  convertParm.cv_dstDesc.ds_columnName = NULL;
+
+  convertParm.cv_dstValue.dv_null = FALSE;
+  convertParm.cv_dstValue.dv_length = decimalStrLen;
+  convertParm.cv_dstValue.dv_value = decimalStr;
+
+  IIapi_convertData (&convertParm);
+
+  returnValue = rb_str_new2 (decimalStr+2);
+
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+  return returnValue;
+}
+
+
+/*
+**      processIntField() - Convert Ingres integer to Ruby numeric
+**
+**      Description - 
+**              Convert Ingres integer (lengths 1, 2, 4 or 8) to Ruby
+**              numeric (Fixnum or Bignum).
+**
+**              Ruby numeric types w/ ranges:
+**                 Fixnum  -2**30      ->    2**30-1    #most platforms
+**                    (-1,073,741,824)   (1,073,741,823)
+**                         -2**62      ->    2**62-1    #some 64-bit? platforms
+**                 Bignum: unlimited...anything outside range of Fixnum
+**
+**              Ingres integer types w/ ranges and mapping to Ruby:
+**                 tinyint(integer1)  -128 -> 127                  Fixnum
+**                 smallint(integer2) -32768 -> 32767              Fixnum
+**                 integer(integer4)  -2**31     ->    2**31-1     Fixnum/Bignum
+**                               (-2,147,483,648)  (2,147,483,647)
+**                 bigint(integer8)   -2**63     ->    2**63-1     Fixnum/Bignum
+**
+**              The Ruby macros xxx2NUM/FIX are used to do the conversion.
+**              If the Ingres type will always fit within a Ruby Fixnum,
+**              then use INT2FIX because it is faster.  Otherwise, use the
+**              appropriate xxx2NUM macro which will convert it to either
+**              Fixnum or Bignum depending on the value.
+**
+**      History
+**              06/18/08 (lunbr01)
+**                      Added Ingres bigint support and used INT2FIX 
+**                      instead of INT2NUM where possible for performance.
+**                      Add function documentation.
+*/
+VALUE
 processIntField (IIAPI_DATAVALUE * param_columnData)
 {
   VALUE ret_val;
@@ -2127,16 +2235,20 @@ processIntField (IIAPI_DATAVALUE * param_columnData)
   switch (param_columnData->dv_length)
     {
     case 1:
-      ret_val = INT2NUM ((char) *((II_INT1 *) param_columnData->dv_value));
+      ret_val = INT2FIX ((char) *((II_INT1 *) param_columnData->dv_value));
       //printf("case 1 1 m_current_database is %s \n",m_current_database);
       break;
     case 2:
-      ret_val = INT2NUM ((short) *((II_INT2 *) param_columnData->dv_value));
+      ret_val = INT2FIX ((short) *((II_INT2 *) param_columnData->dv_value));
       //printf("case 2 1 m_current_database is %s \n",m_current_database);
       break;
     case 4:
-      ret_val = INT2NUM ((long) *((II_INT4 *) param_columnData->dv_value));
-      //printf("case 1 1 m_current_database is %s \n",m_current_database);
+      ret_val = LONG2NUM ((long) *((II_INT4 *) param_columnData->dv_value));
+      //printf("case 4 1 m_current_database is %s \n",m_current_database);
+      break;
+    case 8:
+      ret_val = LL2NUM ((__int64) *((__int64 *) param_columnData->dv_value));
+      //printf("case 8 1 m_current_database is %s \n",m_current_database);
       break;
     default:
       if (ii_globals.debug)
@@ -2166,7 +2278,7 @@ processFloatField (IIAPI_DATAVALUE * param_columnData)
     {
     case 4:
       ret_val =
-	rb_float_new ((float) *((II_FLOAT4 *) param_columnData->dv_value));
+	rb_float_new ((double) *((II_FLOAT4 *) param_columnData->dv_value));
       break;
 
     case 8:
@@ -2187,6 +2299,23 @@ processFloatField (IIAPI_DATAVALUE * param_columnData)
     printf ("Exiting %s.\n", function_name);
   return ret_val;
 }
+
+
+VALUE
+processMoneyField (IIAPI_DATAVALUE * param_columnData)
+{
+  VALUE ret_val;
+  char function_name[] = "processMoneyField";
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  ret_val = rb_float_new ((double) *((II_FLOAT8 *) param_columnData->dv_value) / 100.00);
+
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+  return ret_val;
+}
+
 
 
 VALUE
@@ -2360,17 +2489,6 @@ processLOBField (char *param_nlob_field, int param_nlob_length)
 
 
 VALUE
-processShortField (IIAPI_DATAVALUE * param_columnData)
-{
-  char function_name[] = "processShortField";
-  if (ii_globals.debug)
-    printf ("Entering %s.\n", function_name);
-
-  return INT2NUM ((short) *((II_INT2 *) param_columnData->dv_value));
-}
-
-
-VALUE
 processUnImplementedField ()
 {
   char function_name[] = "processUnImplementedField";
@@ -2385,35 +2503,13 @@ processUnImplementedField ()
 }
 
 
-// here are all the Ingres datatypes
-/*
-   # define IIAPI_HNDL_TYPE    ((IIAPI_DT_ID) -1)
-   # define IIAPI_CHR_TYPE     ((IIAPI_DT_ID) 32)
-   # define IIAPI_CHA_TYPE     ((IIAPI_DT_ID) 20)
-   # define IIAPI_VCH_TYPE     ((IIAPI_DT_ID) 21)
-   # define IIAPI_LVCH_TYPE    ((IIAPI_DT_ID) 22)
-   # define IIAPI_BYTE_TYPE    ((IIAPI_DT_ID) 23)
-   # define IIAPI_VBYTE_TYPE   ((IIAPI_DT_ID) 24)
-   # define IIAPI_LBYTE_TYPE   ((IIAPI_DT_ID) 25)
-   # define IIAPI_NCHA_TYPE    ((IIAPI_DT_ID) 26)
-   # define IIAPI_NVCH_TYPE    ((IIAPI_DT_ID) 27)
-   # define IIAPI_LNVCH_TYPE   ((IIAPI_DT_ID) 28)
-   # define IIAPI_TXT_TYPE     ((IIAPI_DT_ID) 37)
-   # define IIAPI_LTXT_TYPE    ((IIAPI_DT_ID) 41)
-   # define IIAPI_INT_TYPE     ((IIAPI_DT_ID) 30)
-   # define IIAPI_FLT_TYPE     ((IIAPI_DT_ID) 31)
-   # define IIAPI_MNY_TYPE     ((IIAPI_DT_ID)  5)
-   # define IIAPI_DEC_TYPE     ((IIAPI_DT_ID) 10)
-   # define IIAPI_DTE_TYPE     ((IIAPI_DT_ID)  3)
-   # define IIAPI_LOGKEY_TYPE  ((IIAPI_DT_ID) 11)
-   # define IIAPI_TABKEY_TYPE  ((IIAPI_DT_ID) 12)
-*/
 VALUE
 processField (RUBY_IIAPI_DATAVALUE * param_columnData, int param_columnNumber,
-	      int param_dataType)
+	      IIAPI_DESCRIPTOR * param_descrParm)
 {
   VALUE ret_val;
   IIAPI_DATAVALUE *dataValue = param_columnData->dataValue;
+  int param_dataType = param_descrParm->ds_dataType;
   char function_name[] = "processField";
   if (ii_globals.debug)
     printf ("Entering %s.\n", function_name);
@@ -2458,23 +2554,31 @@ processField (RUBY_IIAPI_DATAVALUE * param_columnData, int param_columnNumber,
       break;
 
     case IIAPI_DEC_TYPE:
+      ret_val = processDecimalField (dataValue, param_descrParm);
+      break;
+
     case IIAPI_FLT_TYPE:
-      ret_val = processIntField (dataValue);
+      ret_val = processFloatField (dataValue);
       break;
 
     case IIAPI_DTE_TYPE:
-      ret_val = processDateField (dataValue);
+#ifdef IIAPI_DATE_TYPE
+    case IIAPI_DATE_TYPE:
+    case IIAPI_TIME_TYPE:
+    case IIAPI_TMWO_TYPE:
+    case IIAPI_TMTZ_TYPE:
+    case IIAPI_TS_TYPE:
+    case IIAPI_TSWO_TYPE:
+    case IIAPI_TSTZ_TYPE:
+    case IIAPI_INTYM_TYPE:
+    case IIAPI_INTDS_TYPE:
+#endif
+      ret_val = processDateField (dataValue, param_dataType);
       break;
 
     case IIAPI_MNY_TYPE:
-      ret_val = processUnImplementedField ();
+      ret_val = processMoneyField (dataValue);
       break;
-
-      // all the short * types are here.
-      // not tested
-//    case IIAPI_NCHA_TYPE:
-//      ret_val = processShortField (dataValue);
-//      break;
 
     case IIAPI_NCHA_TYPE:
       ret_val = processUTF16CharField (dataValue->dv_value,
@@ -2589,13 +2693,13 @@ processColumn (VALUE * param_values,
 	  if (ii_globals.debug)
 	    printf ("\nFound a NULL value\n");
 	  nextEntry = rb_str_new2 ("NULL");
-	  rb_ary_store (global_r_data_sizes, param_columnNumber, INT2NUM (0));
+	  rb_ary_store (global_r_data_sizes, param_columnNumber, INT2FIX (0));
 	}
       else
 	{
 	  nextEntry =
 	    processField (&columnData, param_columnNumber,
-			  param_descrParm->ds_dataType);
+			  param_descrParm);
 	}
 
       rb_ary_push ((*param_values), nextEntry);

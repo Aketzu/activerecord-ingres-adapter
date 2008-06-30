@@ -24,6 +24,16 @@
 #           the equivalent Ingres column type.   
 #       01/17/08 (grant.croker@ingres.com)
 #           Add GPL License header
+#       06/27/08 (grant.croker@ingres.com)
+#           Add support for Rails Migrations.
+#       06/27/08 (bruce.lunsford@ingres.com)
+#           Add support for Ingres datatypes float4, float8, and money
+#           as AR :float and Ruby Float; previously, Ingres floats
+#           were mapped to AR nil and Ruby String. Remove unneeded/unused
+#           code such as SMALLINT and xxx_simplified_type() methods.
+#           Add mapping for Ingres ANSI date/time formats and change
+#           INGRESDATE (=DATE in pre-ANSI Ingres) mapping from :date to
+#           :datetime.
 #++
 
 
@@ -106,20 +116,6 @@ module ActiveRecord
 
             super(name, default, sql_type_hash["column_type"], null)
 
-            complete_trace("PRE @type=#{@type} and @sql_type=#{@sql_type}")
-
-            if(name =~ /(_time|written_on)$/ ) then
-               @type = :time
-               @sql_type = "TIME"
-            end
-            if(@sql_type=="DATE") then
-               @type=:date
-            end
-            if(@sql_type=="BOOLEAN") then
-               @type=:boolean
-            end
-
-            complete_trace("POST @type=#{@type} and @sql_type=#{@sql_type}")
          end
 
          def type_cast(value)
@@ -184,58 +180,29 @@ module ActiveRecord
 
 
          private
-         def aaa_simplified_type(field_type)
-            complete_trace(" in simplified_type(#{field_type}) ")
-            return :integer if field_type.downcase =~ /long/
-            return :integer if field_type.downcase =~ /integer/
-            return :float   if field_type.downcase == "money"
-            return :boolean if field_type.downcase.index("smallint    ")
-            return :boolean if field_type.downcase.index("tinyint    ")
-         end
-
-
          def simplified_type(field_type)
             complete_trace(" in simplified_type(#{field_type}) ")
             case field_type
             when /INTEGER/
                :integer
-            when /TINYINT/
-               :boolean
+            when /FLOAT|MONEY/
+               :float
             when /BOOLEAN/
                :boolean
             when /VARCHAR/
                :string
             when /CHAR/
                :string
-            when /DATE/
+            when /ANSIDATE/
+               :date
+            when /DATE|INGRESDATE/
                :datetime
-            end
-         end
-
-
-         def aaa_simplified_type(field_type)
-            complete_trace(" in simplified_type(#{field_type}) ")
-            case field_type
-            when /int/i
-               :integer
-            when /float|double|decimal|numeric/i
-               :float
-            when /datetime/i
-               :datetime
-            when /timestamp/i
+            when /TIMESTAMP/
                :timestamp
-            when /time/i
+            when /TIME/
                :time
-            when /date/i
-               :datetime
-            when /clob/i, /text/i
-               :text
-            when /blob/i, /binary/i
-               :binary
-            when /char/i, /string/i
+            when /INTERVAL/    # No equivalent in Rails
                :string
-            when /smallint/i
-               :boolean
             end
          end
       end
@@ -260,15 +227,16 @@ module ActiveRecord
          def native_database_types
             complete_trace(" in native_database_type ")
             {
+               #:primary_key => "TABLE_KEY NOT NULL with system_maintained",
                :primary_key => "integer NOT NULL PRIMARY KEY",
                :string      => { :name => "varchar(255)"},
                :text        => { :name => "text" },
                :integer     => { :name => "integer" },
                :float       => { :name => "float" },
-               :datetime    => { :name => "date" },
-               :timestamp   => { :name => "date" },
+               :datetime    => { :name => "ingresdate" },
+               :timestamp   => { :name => "timestamp" },
                :time        => { :name => "time" },
-               :date        => { :name => "date" },
+               :date        => { :name => "ansidate" }, #"date" pre-ansidate
                :binary      => { :name => "blob" },
                :boolean     => { :name => "tinyint" }
             }
@@ -956,7 +924,7 @@ module ActiveRecord
                puts "\n-------------\n"
             end
 
-            if( (type_name=="INTEGER") && (length.to_s=="1" ) ) then
+            if( (type_name=="INTEGER") && (length.to_s=="1") ) then
                return "BOOLEAN"
             end
 

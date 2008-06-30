@@ -1,4 +1,6 @@
 SVN
+- Add support for Ingres datatypes float4, float8, money, decimal, bigint,
+  and ANSI date/time/timestamp.
 - Add support in ingres_adapter.rb for Rails migrations
 - Restrict tables() to non-system tables
 
