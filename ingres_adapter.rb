@@ -34,6 +34,11 @@
 #           Add mapping for Ingres ANSI date/time formats and change
 #           INGRESDATE (=DATE in pre-ANSI Ingres) mapping from :date to
 #           :datetime.
+#       07/02/08 (grant.croker@ingres.com)
+#           Add quote_column_names() for quoting of table and column names. 
+#           Required for the ActiveRecord base unit tests
+#       07/02/08 (grant.croker@ingres.com)
+#           Fix data truncation for the ActiveRecord :text type
 #++
 
 
@@ -227,10 +232,9 @@ module ActiveRecord
          def native_database_types
             complete_trace(" in native_database_type ")
             {
-               #:primary_key => "TABLE_KEY NOT NULL with system_maintained",
                :primary_key => "integer NOT NULL PRIMARY KEY",
-               :string      => { :name => "varchar(255)"},
-               :text        => { :name => "text" },
+               :string      => { :name => "varchar", :limit => 255 },
+               :text        => { :name => "varchar", :limit => 32000 },
                :integer     => { :name => "integer" },
                :float       => { :name => "float" },
                :datetime    => { :name => "ingresdate" },
@@ -376,6 +380,10 @@ module ActiveRecord
             return column_name
          end
 
+         # Quotes column names for use in SQL queries.
+         def quote_column_name(name) #:nodoc:
+            %("#{name}")
+         end
 
          # DATABASE STATEMENTS ======================================
 

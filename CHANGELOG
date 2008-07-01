@@ -1,4 +1,7 @@
-SVN
+ersion 1.3.0
+- Add quote_column_names() for quoting of table and column names. Required
+  for the ActiveRecord base unit tests
+- Fix data truncation for the ActiveRecord :text type
 - Add support for Ingres datatypes float4, float8, money, decimal, bigint,
   and ANSI date/time/timestamp.
 - Add support in ingres_adapter.rb for Rails migrations
