@@ -26,12 +26,7 @@ TODO for the Ingres Ruby Driver
   ========
 
 1. Data type support 
- 1. SQL Date Time
- 2. Money
- 3. Decimal
- 4. Float4/8
- 5. BigInt/Integer8
- 6. long nvarchar 
+ 1. long nvarchar 
 2. Multiple concurrent connections 
  1. Current implementation uses a global variable to hold the OpenAPI connection information. In multi-threaded environments only a single connection can be maintained. In a multi-process environment, such as Apache-Prefork, only one connection per process can be made. 
 3. Concurrent result-sets 
@@ -41,7 +36,7 @@ TODO for the Ingres Ruby Driver
 5. It should be possible to alter the output from Ingres.table() to only user tables, only system tables or all tables (current default)
 6. Determine if II_DATE_FORMAT=SWEDEN is required for Ruby or RoR. If the former this can be enforced on connect calling IIapi_setEnvParam() with IIAPI_EP_DATE_FORMAT. If it is required for RoR then there needs to be some sort of mechanism to set the date format.
  1. Determine other localization needs 
-7. Compare the NCMEC adapter to the native adaptor, implementing missing changes 
+7. Compare the original adapter to the native adaptor, implementing missing changes 
 8. Add each method to ingres_adaptor.rb 
  1. Required for AR unit tests 
 9. Create a RubyGem? (installable package) 
