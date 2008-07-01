@@ -21,8 +21,10 @@ end
 if have_header('iiapi.h')
     if RUBY_PLATFORM =~ /mswin32/
         if have_library('oiapi','IIapi_initialize') # Check for Ingres 2.6
+            have_library('ingres')
             puts "Found Ingres 2.6 or earlier.\n"
         elsif have_library('iilibapi','IIapi_initialize')
+            have_library('libingres')
             puts "Found Ingres 2006 or later.\n"
         else
             puts "\n\nI couldn't find the Ingres libraries so I didn't create your Makefile.\n"
