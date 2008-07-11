@@ -4,7 +4,7 @@ Ingres Corporation
 
 
 
-Ingres Ruby Active Record Adapter/Driver Version 1.3.0
+Ingres Ruby Active Record Adapter/Driver Version 1.3.1
 
 -------------------------------------------------------------------------------
 
@@ -71,22 +71,11 @@ interface is a more direct SQL-level interface.
 
 New in This Release
 
-This is a major release that addresses the following:
-
-* Ingres Ruby Driver
-
-  o Restrict tables() to only return non-system tables
-  o Add support for Ingres datatypes float4, float8, money, decimal, bigint,
-    and ANSI SQL date/time/timestamp
+This is a minor release that addresses the following:
 
 * Ruby on Rails adapter
 
-  o Add support for Ruby on Rails 2.1 Migrations - for more information about
-    ActiveRecord Migrations see - http://wiki.rubyonrails.org/rails/pages/
-    UnderstandingMigrations
-  o Extend driver support for new data types to Rails
-  o Improved test results for ActiveRecord unit tests - see http://
-    community.ingres.com/wiki/How_to_test_Ruby_on_Rails_with_Ingres
+  o Add support for the correct null clause for Ingres 9.1.1 and earlier
 
 
 -------------------------------------------------------------------------------
