@@ -1,4 +1,7 @@
-ersion 1.3.0
+SVN
+- Add support for the null clause used in Ingres 9.1.x (and earlier)
+
+version 1.3.0
 - Add quote_column_names() for quoting of table and column names. Required
   for the ActiveRecord base unit tests
 - Fix data truncation for the ActiveRecord :text type

@@ -760,6 +760,21 @@ module ActiveRecord
             columns
          end
 
+         # Ingres 9.1.x and earlier require 'COLNAME TYPE DEFAULT NULL WITH NULL' as part of the column definition
+         # for CREATE TABLE
+         # TODO : add a server version check so as to only do this for Ingres 9.1.x and earlier.
+         def add_column_options!(sql, options) #:nodoc:
+            sql << " DEFAULT #{quote(options[:default], options[:column])}" if options_include_default?(options)
+            # must explcitly check for :null to allow change_column to work on migrations
+            if options.has_key? :null
+               if options[:null] == false
+                  sql << " NOT NULL"
+               else
+                  sql << " WITH NULL"
+               end
+            end
+         end
+
          def get_ordering_field(table_name)
             field = get_primary_key(table_name)
             if(!field) then
