@@ -572,7 +572,7 @@ Known issues are as follows:
 
 More Information
 
-As this product is still in alpha status, issues specific to the Ingres Ruby AR
+As this product is still in beta status, issues specific to the Ingres Ruby AR
 adapter and driver should be posted on the Ingres forum http://
 community.ingres.com/forums/index.php?c=3 in the Database Driver and APIs forum
 rather than contacting Ingres Technical Support.

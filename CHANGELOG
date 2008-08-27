@@ -1,5 +1,6 @@
 SVN
 - Add support for the null clause used in Ingres 9.1.x (and earlier)
+- Change status to Beta
 
 version 1.3.0
 - Add quote_column_names() for quoting of table and column names. Required
