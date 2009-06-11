@@ -3327,7 +3327,7 @@ Init_Ingres ()
 # define        CM_A_SPACE        0x10	/* SPACE */
 # define cmdblspace(str) (((*(str)&0377) == 0xA1) && ((*((str)+1)&0377) == 0xA1))
 
-u_i2 *CM_AttrTab;
+extern u_i2 *CM_AttrTab;
 char *CM_CaseTab;
 
 # if defined(NT_GENERIC)
@@ -3345,20 +3345,6 @@ FUNC_EXTERN char *CMgetCaseTab (
 # endif
 
 
-# ifdef        DOUBLEBYTE
-
-# define CMbytecnt(ptr)        (CMdbl1st(ptr) ? 2 : 1)
-# define CMnext(str)        (CMdbl1st(str) ? (str) += 2 : ++(str))
-# if defined(NT_GENERIC) && defined(IMPORT_DLL_DATA)
-# define CMdbl1st(str)        ((((u_i2 *)CMgetAttrTab())[*(str)&0377] & CM_A_DBL1) != 0)
-# define CMwhite(str)        ((((u_i2 *)CMgetAttrTab())[*(str)&0377] & CM_A_SPACE) || cmdblspace(str))
-# else /* NT_GENERIC && IMPORT_DLL_DATA */
-# define CMdbl1st(str)        ((CM_AttrTab[*(str)&0377] & CM_A_DBL1) != 0)
-# define CMwhite(str)        ((CM_AttrTab[*(str)&0377] & CM_A_SPACE) || cmdblspace(str))
-# endif	/* NT_GENERIC && IMPORT_DLL_DATA */
-
-# else
-
 # define CMbytecnt(ptr)        (1)
 # define CMnext(str)        (++(str))
 # define CMdbl1st(str)        (FALSE)
@@ -3368,9 +3354,7 @@ FUNC_EXTERN char *CMgetCaseTab (
 # else /* NT_GENERIC && IMPORT_DLL_DATA */
 # define CMwhite(str)        ((CM_AttrTab[*(str)&0377] & CM_A_SPACE) != 0)
 # endif	/* NT_GENERIC && IMPORT_DLL_DATA */
-// # endif
 
-# endif
 
 
 size_t
