@@ -1,6 +1,8 @@
 SVN
 - CM_AttrTab should be defined as an extern
 - Improve Ingres library and header detection
+_
+version 1.3.0
 - Add support for the null clause used in Ingres 9.1.x (and earlier)
 - Change status to Beta
 
