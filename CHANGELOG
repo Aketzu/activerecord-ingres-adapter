@@ -1,4 +1,20 @@
 SVN
+- Add support for multiple active connections
+- replaced all calls to ii_allocate()/ii_reallocate() with their ruby counterparts ALLOC_N and REALLOC_N
+  - Except for memory allocation in getColumn()
+- Added a SQL query classifier to eliminate the need to force the query into upper case
+- Moved Unicode functionality into Unicode.c and Unicode.h
+- Moved defines/typedefs/function prototypes into Ingres.h
+- Added new unit tests directory, see "Testing Done" for more information
+- Ingres.connect() takes an optional username/password
+  - eliminates the need for connect_with_credentials (now an alias pointing to connect)
+- Ingres.execute() now accepts a variable number of parameters, requires query but parameter values is optional
+  - Ingres.pexecute() now an alias for Ingres.execute()
+- Re-formatted the code using astyle (http://astyle.sourceforge.net/)
+- Added the following Ruby constants
+  - VERSION - version string, e.g. "1.4.0-dev"
+  - API_LEVEL - value for IIAPI_VERSION
+  - REVISION - the SVN revision for the driver
 - CM_AttrTab should be defined as an extern
 - Improve Ingres library and header detection
 _

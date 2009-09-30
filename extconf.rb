@@ -68,6 +68,8 @@ if have_header('iiapi.h')
             $CFLAGS += " -g "
         end
     end 
+    $OBJS=['Unicode.o','Ingres.c']
+
     create_makefile('Ingres')
 else
     puts "Unable to find iiapi.h, please verify your setup"
