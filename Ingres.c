@@ -544,7 +544,7 @@ ii_disconnect (VALUE param_self)
   /* If there is an active transaction it must be closed before disconnection */
   if (ii_conn->tranHandle)
   {
-    ii_api_rollback (ii_conn);
+    ii_api_rollback (ii_conn, NULL);
   }
   if (ii_conn->connHandle)
   {
@@ -604,6 +604,156 @@ void ii_api_disconnect( II_CONN *ii_conn)
   if (ii_globals.debug)
     printf ("Exiting %s.\n", function_name);
 }
+
+VALUE
+ii_commit (VALUE param_self)
+{
+  char function_name[] = "ii_commit";
+  II_CONN *ii_conn = NULL;
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  Data_Get_Struct(param_self, II_CONN, ii_conn);
+
+  /* We cannot commit a transaction if there is not one is already in place */
+  if (ii_conn->tranHandle == NULL)
+  {
+    rb_raise (rb_eRuntimeError, "Unable to commit a non-existent transaction");
+  }
+  else
+  {
+    ii_api_commit (ii_conn);
+  }
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+  return Qnil;
+}
+
+VALUE
+ii_rollback (int param_argc, VALUE * param_argv, VALUE param_self)
+{
+  char function_name[] = "ii_rollback";
+  II_CONN *ii_conn = NULL;
+  VALUE param_savepointName = (VALUE) FALSE;
+  II_SAVEPOINT_ENTRY *savePtEntry = NULL;
+  II_SAVEPOINT_ENTRY *nextSavePtEntry = NULL;
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  rb_scan_args (param_argc, param_argv, "01", &param_savepointName);
+  if (param_argc)
+  {
+    Check_Type(param_savepointName, T_STRING);
+  }
+
+  Data_Get_Struct(param_self, II_CONN, ii_conn);
+
+  /* We cannot rollback a transaction if there is not one is already in place */
+  if (ii_conn->tranHandle == NULL)
+  {
+    rb_raise (rb_eRuntimeError, "Unable to rollback a non-existent transaction");
+  }
+  else
+  {
+    if (param_argc)
+    {
+      /* Find the the savepoint entry in the list of savepoints */
+      if (ii_conn->savePtList)
+      {
+        savePtEntry = ii_conn->savePtList;
+        while (savePtEntry)
+        {
+          /* Check to see if the entry's savePtName is the same length else we could
+           * have a false postive result */
+          if (strlen(savePtEntry->savePtName) == RSTRING_LEN(param_savepointName))
+          {
+            if (strncasecmp(savePtEntry->savePtName, RSTRING_PTR (param_savepointName), RSTRING_LEN(param_savepointName)) == 0)
+            {
+              /* Found it */
+              break;
+            }
+          }
+          /* Not found move on to the next one (if any) */
+          savePtEntry = savePtEntry->nextSavePtEntry;
+        }
+      }
+      else
+      {
+        rb_raise (rb_eRuntimeError, "Unable to rollback to a non-existent savepoint");
+      }
+      if (savePtEntry == NULL)
+      {
+        rb_raise (rb_eRuntimeError, "Savepoint %s does not exist", RSTRING_PTR (param_savepointName));
+      }
+    }
+    
+    ii_api_rollback (ii_conn, savePtEntry);
+
+  }
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+  return Qnil;
+}
+
+/* Free up the memory allocated for a savepoint
+ * input:
+ *    pointer to a II_SAVEPOINT_ENTRY structure
+ * output:
+ *    none
+ */
+void
+ii_free_savePtEntries (II_SAVEPOINT_ENTRY *savePtEntry)
+{
+  char function_name[] = "ii_free_savePtEntries";
+  II_PTR nextSavePtEntry = NULL;
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  nextSavePtEntry = savePtEntry->nextSavePtEntry;
+
+  if (ii_globals.debug || ii_globals.debug_transactions)
+    printf ("Releasing save point %s.\n", savePtEntry->savePtName);
+
+  ii_free((void **) &savePtEntry);
+
+  /* Follow the white rabbit */
+  if (nextSavePtEntry)
+  {
+    ii_free_savePtEntries (nextSavePtEntry);
+  }
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+}
+
+VALUE
+ii_savepoint (VALUE param_self, VALUE param_savepointName)
+{
+  char function_name[] = "ii_savepoint";
+  II_CONN *ii_conn = NULL;
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  Check_Type (param_savepointName, T_STRING);
+  Data_Get_Struct(param_self, II_CONN, ii_conn);
+
+  /* We cannot generate a save point if there is no transaction or if auto commit is in effect */
+  if (ii_conn->tranHandle == NULL)
+  {
+    rb_raise (rb_eRuntimeError, "Unable to generate a save point if there is no active transaction");
+  }
+  else
+  {
+    ii_api_savepoint (ii_conn, param_savepointName);
+  }
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+  return Qnil;
+}
+
 void
 startTransaction (VALUE param_self)
 {
@@ -645,6 +795,8 @@ ii_api_commit (II_CONN *ii_conn)
 {
   IIAPI_COMMITPARM commitParm;
   char function_name[] = "commit";
+  II_SAVEPOINT_ENTRY *tmpSavePtEntry; /* pointer to a savePtEntry chain that needs to be free'd up */
+
   if (ii_globals.debug)
     printf ("Entering %s.\n", function_name);
 
@@ -662,6 +814,13 @@ ii_api_commit (II_CONN *ii_conn)
             commitParm.cm_genParm.gp_status);
   ii_checkError (&commitParm.cm_genParm);
 
+  /* Remove all save points */
+  if (ii_conn->savePtList)
+  {
+    tmpSavePtEntry = (II_SAVEPOINT_ENTRY *) ii_conn->savePtList;
+    ii_free_savePtEntries (tmpSavePtEntry);
+    ii_conn->savePtList = NULL;
+  }
   /* now turn automatic transaction handling back on */
   ii_conn->tranHandle = NULL;
   ii_conn->autocommit = TRUE;
@@ -672,9 +831,10 @@ ii_api_commit (II_CONN *ii_conn)
 
 
 void
-ii_api_rollback (II_CONN *ii_conn )
+ii_api_rollback (II_CONN *ii_conn, II_SAVEPOINT_ENTRY *savePtEntry)
 {
   IIAPI_ROLLBACKPARM rollbackParm;
+  II_SAVEPOINT_ENTRY *tmpSavePtEntry; /* pointer to a savePtEntry chain that needs to be free'd up */
 
   char function_name[] = "ii_api_rollback";
   if (ii_globals.debug)
@@ -685,17 +845,92 @@ ii_api_rollback (II_CONN *ii_conn )
     rollbackParm.rb_tranHandle = ii_conn->tranHandle;
     rollbackParm.rb_genParm.gp_callback = NULL;
     rollbackParm.rb_genParm.gp_closure = NULL;
-    rollbackParm.rb_savePointHandle = NULL;
+    rollbackParm.rb_savePointHandle = savePtEntry ? savePtEntry->savePtHandle : NULL;
 
     IIapi_rollback (&rollbackParm);
 
     ii_sync (&(rollbackParm.rb_genParm));
     ii_checkError (&rollbackParm.rb_genParm);
 
-    /* now turn automatic transaction handling back on */
-    ii_conn->tranHandle = NULL;
-    ii_conn->autocommit = TRUE;
+    /*
+     * Remove successive savePtEntry records as they are no longer valid 
+     * If savePtEntry is NULL then we need to remove all savepoint entries
+     *
+     * For a given set of savepoints, created in the following order: 
+     *      A, B, C, D, E 
+     * Rolling back savepoint C causes D and E to become invalid
+    */
+    if (savePtEntry)
+    {
+      /* Remove any later/newer save points */
+      if (savePtEntry->nextSavePtEntry)
+      {
+        tmpSavePtEntry = savePtEntry->nextSavePtEntry;
+        ii_free_savePtEntries (tmpSavePtEntry);
+        savePtEntry->nextSavePtEntry = NULL;
+        ii_conn->lastSavePtEntry = savePtEntry;
+      }
+    }
+    else if (ii_conn->savePtList && savePtEntry == NULL)
+    {
+      /* remove all save points */
+      tmpSavePtEntry = (II_SAVEPOINT_ENTRY *) ii_conn->savePtList;
+      ii_free_savePtEntries (tmpSavePtEntry);
+      ii_conn->savePtList = NULL;
+    }
+
+    /* We can only set tranHandle to NULL if there are no more save points */
+    if (ii_conn->savePtList == NULL)
+    {
+      /* now turn automatic transaction handling back on */
+      ii_conn->tranHandle = NULL;
+      ii_conn->autocommit = TRUE;
+    }
   }
+
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+}
+
+void
+ii_api_savepoint (II_CONN *ii_conn, VALUE savePtName)
+{
+  IIAPI_SAVEPTPARM	savePtParm;
+  II_SAVEPOINT_ENTRY *savePtEntry = NULL;
+  char function_name[] = "ii_api_savepoint";
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  savePtParm.sp_genParm.gp_callback = NULL;
+  savePtParm.sp_genParm.gp_closure = NULL;
+  savePtParm.sp_tranHandle = ii_conn->tranHandle;
+  savePtParm.sp_savePoint = RSTRING_PTR(savePtName); 
+
+  if (ii_globals.debug || ii_globals.debug_transactions)
+    printf ("Creating savepoint %s\n", RSTRING_PTR(savePtName));
+  IIapi_savePoint( &savePtParm );
+  ii_sync (&(savePtParm.sp_genParm));
+
+  if (ii_globals.debug)
+    printf ("\nTransaction ii_api_savepoint status is ++%d++\n", savePtParm.sp_genParm.gp_status);
+  ii_checkError (&savePtParm.sp_genParm);
+
+  /* store the savepoint name and handle for issuing a rollback later on */
+  savePtEntry = (II_SAVEPOINT_ENTRY *) ii_allocate (1,sizeof(II_SAVEPOINT_ENTRY));
+  savePtEntry->savePtName = (char *) ii_allocate (RSTRING_LEN(savePtName), sizeof(char));
+  savePtEntry->savePtHandle = savePtParm.sp_savePointHandle; 
+  memcpy(savePtEntry->savePtName, RSTRING_PTR(savePtName), RSTRING_LEN(savePtName));
+  savePtEntry->nextSavePtEntry = NULL;
+
+  if (ii_conn->savePtList)
+  {
+    (ii_conn->lastSavePtEntry)->nextSavePtEntry = savePtEntry;
+  }
+  else
+  {
+    ii_conn->savePtList = (II_PTR)savePtEntry;
+  }
+  ii_conn->lastSavePtEntry = savePtEntry;
 
   if (ii_globals.debug)
     printf ("Exiting %s.\n", function_name);
@@ -1840,7 +2075,7 @@ ii_api_getDescriptors (II_CONN *ii_conn, IIAPI_GETDESCRPARM * param_descrParm)
   if (ii_checkError (&(param_descrParm->gd_genParm)))
   {
     ii_api_query_close (ii_conn);
-    ii_api_rollback (ii_conn);
+    ii_api_rollback (ii_conn, NULL);
     rb_raise (rb_eRuntimeError, "Error! Failed while getting Descriptors. ");
   }
 
@@ -2405,16 +2640,16 @@ int getColumn (II_CONN  *ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData)
   int status = 0;
   long bufferLen = 0;
   char *buffer = NULL;
+  char *bufferPtr = NULL;
   char function_name[] = "getColumn";
+  short int segmentLen;
+  long newBufferLen;
 
   if (ii_globals.debug)
     printf ("Entering %s.\n", function_name);
 
   getColParm.gc_columnData = dataValue;
 
-  /* Init buffer to place LOB data */
-  buffer = ii_allocate(LOB_SEGMENT_SIZE, sizeof(char *));
-  bufferLen = LOB_SEGMENT_SIZE;
   do
   {
     getColParm.gc_genParm.gp_callback = NULL;
@@ -2436,21 +2671,30 @@ int getColumn (II_CONN  *ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData)
     }
 
     param_columnData->dv_length = dataValue->dv_length;
-    if (getColParm.gc_moreSegments || buffer != NULL)
-    {
-      short int segmentLen;
-      long newBufferLen;
 
+    if (getColParm.gc_moreSegments)
+    {
       memcpy ((char *) &segmentLen, dataValue->dv_value, 2);
       newBufferLen = bufferLen + segmentLen;
-      /*
-      ** TODO Improve performance by not reallocating new larger
-      ** buffer for every lob segment (approx 4K bytes each).  See
-      ** Ingres ODBC driver for more efficient algorithm.
-      */
-      buffer = ii_reallocate (buffer, newBufferLen + 1, sizeof(char));
-      //buffer = REALLOC_N (buffer, char, newBufferLen + 1);
-      memcpy (buffer + bufferLen, (char *)dataValue->dv_value + 2, segmentLen);
+
+      if (buffer == NULL)
+      {
+        /* Init buffer to place LOB data */
+        buffer = ii_allocate(LOB_SEGMENT_SIZE, sizeof(char *));
+        bufferLen = LOB_SEGMENT_SIZE;
+        bufferPtr = buffer;
+      }
+      else
+      {
+        /*
+        ** TODO Improve performance by not reallocating new larger
+        ** buffer for every lob segment (approx 4K bytes each).  See
+        ** Ingres ODBC driver for more efficient algorithm.
+        */
+        buffer = ii_reallocate (buffer, newBufferLen + 1, sizeof(char));
+        bufferPtr = buffer + newBufferLen;
+      }
+      memcpy (bufferPtr, (char *)dataValue->dv_value + 2, segmentLen);
       bufferLen = newBufferLen;
       param_columnData->dv_length = bufferLen;
     }
@@ -2633,9 +2877,10 @@ ii_execute_query (II_CONN *ii_conn, char *param_sqlText, int param_argc, VALUE p
 VALUE
 ii_execute (int param_argc, VALUE * param_argv, VALUE param_self)
 {
-  VALUE ret_val;
+  VALUE ret_val = Qnil;
   VALUE param_queryText;
   VALUE params;
+  VALUE savePtName;
   int i;
   char function_name[] = "ii_execute";
   II_CONN *ii_conn;
@@ -2666,9 +2911,23 @@ ii_execute (int param_argc, VALUE * param_argv, VALUE param_self)
       break;
     case INGRES_SQL_ROLLBACK:
       if (ii_conn->tranHandle != NULL)
-        ii_api_rollback (ii_conn);
+        ii_api_rollback (ii_conn, NULL);
       else if (ii_globals.debug || ii_globals.debug_transactions)
         rb_warn ("Attempting to ii_api_rollback a non-existent transaction");
+      break;
+    case INGRES_SQL_ROLLBACK_TO:
+    case INGRES_SQL_ROLLBACK_WORK_TO:
+      /* ROLLBACK [WORK] TO SAVEPOINT */
+      if (ii_conn->tranHandle == NULL)
+      {
+        rb_raise (rb_eRuntimeError, "Unable to rollback a non-existent transaction");
+      }
+      else
+      {
+        /* Extract Savepoint name */
+        savePtName = ii_savepoint_name(ii_conn, StringValuePtr(param_queryText));
+        ii_rollback (1, &savePtName, param_self);
+      }
       break;
     case INGRES_START_TRANSACTION:
       startTransaction (param_self);
@@ -2683,7 +2942,17 @@ ii_execute (int param_argc, VALUE * param_argv, VALUE param_self)
       rb_warn ("Ingres 'GET DBEVENT' is not supported at the current time");
       break;
     case INGRES_SQL_SAVEPOINT:
-      rb_warn ("Ingres 'SAVEPOINT' is not supported at the current time");
+      /* We cannot generate a save point if there is no transaction or if auto commit is in effect */
+      if (ii_conn->tranHandle == NULL)
+      {
+        rb_raise (rb_eRuntimeError, "Unable to generate a save point if there is no active transaction");
+      }
+      else
+      {
+        /* Extract Savepoint name */
+        savePtName = ii_savepoint_name(ii_conn, StringValuePtr(param_queryText));
+        ii_api_savepoint (ii_conn, savePtName);
+      }
       break;
     case INGRES_SQL_AUTOCOMMIT:
       rb_warn ("Use autocommit() to set the auto-commit state");
@@ -2955,6 +3224,11 @@ Init_Ingres ()
   rb_define_method (cIngres, "column_list_of_names", ii_column_names, 0);
   rb_define_method (cIngres, "data_sizes", ii_data_sizes, 0);
 
+  /* Transaction Methods */
+  rb_define_method (cIngres, "commit", ii_commit, 0);
+  rb_define_method (cIngres, "rollback", ii_rollback, -1);
+  rb_define_method (cIngres, "savepoint", ii_savepoint, 1);
+
   /* Aliases of methods */
   rb_define_alias (cIngres, "connect_with_credentials", "connect");
   rb_define_alias (cIngres, "pexecute", "execute");
@@ -2990,7 +3264,7 @@ static void free_ii_conn (II_CONN *ii_conn)
   if (ii_conn)
   {
     /* Clean up the connection */
-    ii_api_rollback (ii_conn);
+    ii_api_rollback (ii_conn, NULL);
     ii_api_disconnect (ii_conn);
   }
 }
@@ -3023,6 +3297,8 @@ static void ii_conn_init(II_CONN *ii_conn)
   ii_conn->r_column_names = (VALUE) FALSE;
   ii_conn->r_data_sizes = (VALUE) FALSE;
   ii_conn->r_data_types = (VALUE) FALSE;
+  ii_conn->savePtList = NULL; /* Linked list of Save point names and their handles */
+  ii_conn->lastSavePtEntry = NULL; 
 
 }
 
@@ -3043,13 +3319,75 @@ static int ii_query_type(char *statement)
   }
   for ( count = 0; count < INGRES_NO_OF_COMMANDS; count++ )
   {
-    if (strncasecmp(SQL_COMMANDS[count].command, statement_ptr, strlen(SQL_COMMANDS[count].command)) == 0 )
+    if (strncasecmp(SQL_COMMANDS[count].command, statement_ptr, SQL_COMMANDS[count].length) == 0)
     {
+      if (count == INGRES_SQL_ROLLBACK)
+      {
+        /* Verify this is ROLLBACK and not ROLLBACK [WORK] TO */
+        if (strlen(statement_ptr) != SQL_COMMANDS[count].length)
+        { 
+          if (strncasecmp(SQL_COMMANDS[INGRES_SQL_ROLLBACK_TO].command, statement_ptr, SQL_COMMANDS[INGRES_SQL_ROLLBACK_TO].length) == 0)
+          {
+            return SQL_COMMANDS[INGRES_SQL_ROLLBACK_TO].code;
+          }
+          if (strncasecmp(SQL_COMMANDS[INGRES_SQL_ROLLBACK_WORK_TO].command, statement_ptr, SQL_COMMANDS[INGRES_SQL_ROLLBACK_WORK_TO].length) == 0)
+          {
+            return SQL_COMMANDS[INGRES_SQL_ROLLBACK_WORK_TO].code;
+          }
+        }
+      }
       return SQL_COMMANDS[count].code;
     }
   }
 
   return -1;
+}
+
+VALUE
+ii_savepoint_name(II_CONN *ii_conn, char *statement)
+{
+  char function_name[] = "ii_savepoint_name";
+  int count = 0;
+  char *statement_ptr = NULL;
+  char *savePtName_start = NULL;
+  char *tmp_savePtName = NULL;
+  char ch;
+  VALUE savePtName = (VALUE) FALSE;
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  statement_ptr = statement + SQL_COMMANDS[ii_conn->queryType].length;
+  /* Look for some white space */
+  while (isspace(*statement_ptr))
+  {
+    statement_ptr++;
+  }
+  savePtName_start = statement_ptr;
+
+  while (*statement_ptr != EOS)
+  {
+    ch = *statement_ptr;
+    if ((isalnum (*statement_ptr)) ||
+        (ch == ' ') || 
+        (ch == '_') || 
+        (ch == '"'))
+    {
+      statement_ptr++;
+    }
+    else
+    {
+      rb_raise(rb_eRuntimeError, "%s : found an invalid character %c", function_name, ch);
+      return Qnil;
+    }
+  }
+
+  tmp_savePtName = (char *) ii_allocate (statement_ptr - savePtName_start, sizeof(char *));
+  memcpy (tmp_savePtName, savePtName_start, statement_ptr - savePtName_start);
+  savePtName = rb_str_new2 (tmp_savePtName);
+  ii_free ((void **) &tmp_savePtName);
+
+  return savePtName;
 }
 
 /*

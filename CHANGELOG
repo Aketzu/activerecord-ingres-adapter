@@ -1,4 +1,6 @@
 SVN
+- Add support for the SQL SAVEPOINT statement
+- Fix a regression where certain query would return no data
 - Add support for multiple active connections
 - replaced all calls to ii_allocate()/ii_reallocate() with their ruby counterparts ALLOC_N and REALLOC_N
   - Except for memory allocation in getColumn()

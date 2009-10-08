@@ -8,6 +8,10 @@ class TestIngresConnection < Test::Unit::TestCase
     assert_kind_of(Ingres, @@ing.connect(@@database), "conn is not an Ingres object")
   end
 
+  def teardown
+    @@ing.disconnect
+  end
+
   def test_blob_fetch
       sql = "select up_image from user_profile where up_id = 1"
       data = @@ing.execute(sql)

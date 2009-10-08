@@ -1,4 +1,4 @@
-# Copyright (c) 2007 Ingres Corporation
+# Copyright (c) 2009 Ingres Corporation
 #
 # Ruby unit tests for the Ingres Ruby driver using the Ruby Test::Unit 
 # Framework see, 
@@ -22,5 +22,6 @@
 # Test case for local connection
 #
 require 'tests/ts_connect.rb'
+require 'tests/ts_execute.rb'
 require 'tests/ts_types.rb'
-
+require 'tests/ts_transactions.rb'

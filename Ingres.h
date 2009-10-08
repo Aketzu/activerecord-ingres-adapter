@@ -68,63 +68,68 @@
 
 /* Query types */
 
-#define INGRES_SQL_SELECT 1
-#define INGRES_SQL_INSERT 2
-#define INGRES_SQL_UPDATE 3
-#define INGRES_SQL_DELETE 4
-#define INGRES_SQL_COMMIT 5
-#define INGRES_SQL_ROLLBACK 6
-#define INGRES_SQL_OPEN 7
-#define INGRES_SQL_CLOSE 8
-#define INGRES_SQL_CONNECT 9
-#define INGRES_SQL_DISCONNECT 10
-#define INGRES_SQL_GETDBEVENT 11
-#define INGRES_SQL_SAVEPOINT 12
-#define INGRES_SQL_AUTOCOMMIT 13
-#define INGRES_SQL_EXECUTE_PROCEDURE 14
-#define INGRES_SQL_CALL 15
-#define INGRES_SQL_COPY 16
-#define INGRES_SQL_CREATE 17
-#define INGRES_SQL_ALTER 18
-#define INGRES_SQL_DROP 19
-#define INGRES_SQL_GRANT 20
-#define INGRES_SQL_REVOKE 21
-#define INGRES_SQL_MODIFY 22
-#define INGRES_SQL_SET 23
+#define INGRES_SQL_SELECT             0
+#define INGRES_SQL_INSERT             1
+#define INGRES_SQL_UPDATE             2
+#define INGRES_SQL_DELETE             3
+#define INGRES_SQL_COMMIT             4
+#define INGRES_SQL_ROLLBACK           5
+#define INGRES_SQL_OPEN               6
+#define INGRES_SQL_CLOSE              7
+#define INGRES_SQL_CONNECT            8
+#define INGRES_SQL_DISCONNECT         9 
+#define INGRES_SQL_GETDBEVENT         10
+#define INGRES_SQL_SAVEPOINT          11
+#define INGRES_SQL_AUTOCOMMIT         12
+#define INGRES_SQL_EXECUTE_PROCEDURE  13
+#define INGRES_SQL_CALL               14
+#define INGRES_SQL_COPY               15
+#define INGRES_SQL_CREATE             16
+#define INGRES_SQL_ALTER              17
+#define INGRES_SQL_DROP               18
+#define INGRES_SQL_GRANT              19
+#define INGRES_SQL_REVOKE             20
+#define INGRES_SQL_MODIFY             21
+#define INGRES_SQL_SET                22
 /* Not really an SQL Statement but INGRES_START_TRANSACTION is expected to be handled as one */
-#define INGRES_START_TRANSACTION 24
+#define INGRES_START_TRANSACTION      23
+#define INGRES_SQL_ROLLBACK_WORK_TO   24
+#define INGRES_SQL_ROLLBACK_TO        25
 
-#define INGRES_NO_OF_COMMANDS 24
+#define INGRES_NO_OF_COMMANDS         26
 static struct
 {
   char        *command;
   int         code;
+  int         length ;
 } SQL_COMMANDS [INGRES_NO_OF_COMMANDS] =
 {
-  { "SELECT", INGRES_SQL_SELECT },
-  { "INSERT", INGRES_SQL_INSERT },
-  { "UPDATE", INGRES_SQL_UPDATE },
-  { "DELETE", INGRES_SQL_DELETE },
-  { "COMMIT", INGRES_SQL_COMMIT },
-  { "ROLLBACK", INGRES_SQL_ROLLBACK },
-  { "OPEN", INGRES_SQL_OPEN },
-  { "CLOSE", INGRES_SQL_CLOSE },
-  { "CONNECT", INGRES_SQL_CONNECT },
-  { "DISCONNECT", INGRES_SQL_DISCONNECT },
-  { "GET DBEVENT", INGRES_SQL_GETDBEVENT },
-  { "SAVEPOINT", INGRES_SQL_SAVEPOINT },
-  { "SET AUTOCOMMIT", INGRES_SQL_AUTOCOMMIT },
-  { "EXECUTE PROCEDURE", INGRES_SQL_EXECUTE_PROCEDURE },
-  { "CALL", INGRES_SQL_CALL },
-  { "COPY", INGRES_SQL_COPY },
-  { "CREATE", INGRES_SQL_CREATE },
-  { "ALTER", INGRES_SQL_ALTER },
-  { "DROP", INGRES_SQL_DROP },
-  { "GRANT", INGRES_SQL_GRANT },
-  { "REVOKE", INGRES_SQL_REVOKE },
-  { "MODIFY", INGRES_SQL_MODIFY },
-  { "SET", INGRES_SQL_SET },
-  { "START TRANSACTION", INGRES_START_TRANSACTION },
+  { "SELECT", INGRES_SQL_SELECT, 6 },
+  { "INSERT", INGRES_SQL_INSERT, 6 },
+  { "UPDATE", INGRES_SQL_UPDATE, 6 },
+  { "DELETE", INGRES_SQL_DELETE, 6 },
+  { "COMMIT", INGRES_SQL_COMMIT, 6 },
+  { "ROLLBACK", INGRES_SQL_ROLLBACK, 8 },
+  { "OPEN", INGRES_SQL_OPEN, 4 },
+  { "CLOSE", INGRES_SQL_CLOSE, 5 },
+  { "CONNECT", INGRES_SQL_CONNECT, 7 },
+  { "DISCONNECT", INGRES_SQL_DISCONNECT, 10 },
+  { "GET DBEVENT", INGRES_SQL_GETDBEVENT, 11 },
+  { "SAVEPOINT", INGRES_SQL_SAVEPOINT, 9 },
+  { "SET AUTOCOMMIT", INGRES_SQL_AUTOCOMMIT, 14 },
+  { "EXECUTE PROCEDURE", INGRES_SQL_EXECUTE_PROCEDURE, 17 },
+  { "CALL", INGRES_SQL_CALL, 4 },
+  { "COPY", INGRES_SQL_COPY, 4 },
+  { "CREATE", INGRES_SQL_CREATE, 6 },
+  { "ALTER", INGRES_SQL_ALTER, 5 },
+  { "DROP", INGRES_SQL_DROP, 4 },
+  { "GRANT", INGRES_SQL_GRANT, 5 },
+  { "REVOKE", INGRES_SQL_REVOKE, 6 },
+  { "MODIFY", INGRES_SQL_MODIFY, 6 },
+  { "SET", INGRES_SQL_SET, 3 },
+  { "START TRANSACTION", INGRES_START_TRANSACTION, 17 },
+  { "ROLLBACK WORK TO", INGRES_SQL_ROLLBACK_WORK_TO, 16 },
+  { "ROLLBACK TO", INGRES_SQL_ROLLBACK_TO, 11 },
 };
 
 /* Cursor Modes */
@@ -140,6 +145,13 @@ typedef struct _II_GLOBALS
   int debug_termination;
   int debug_transactions;
 } II_GLOBALS;
+
+typedef struct _II_SAVEPOINT_ENTRY
+{
+  char   *savePtName;
+  II_PTR savePtHandle;
+  II_PTR nextSavePtEntry;
+} II_SAVEPOINT_ENTRY;
 
 typedef struct _II_CONN
 {
@@ -168,6 +180,8 @@ typedef struct _II_CONN
   VALUE r_data_sizes;
   VALUE r_data_types;
   II_LONG columnCount;
+  II_PTR savePtList;
+  II_SAVEPOINT_ENTRY *lastSavePtEntry;/* Pointer to the last savePtEntry on savePtList */
 } II_CONN;
 
 typedef struct _RUBY_IIAPI_DATAVALUE
@@ -210,8 +224,16 @@ void ii_api_query_close (II_CONN *ii_conn);
 void ii_api_connect (II_CONN *ii_conn, char *param_targetDB, char *param_username, char *param_password);
 void ii_api_commit (II_CONN *ii_conn);
 static int ii_query_type(char *queryText);
-void ii_api_rollback (II_CONN *ii_conn );
+void ii_api_rollback (II_CONN *ii_conn, II_SAVEPOINT_ENTRY *savePtEntry);
 void ii_api_disconnect( II_CONN *ii_conn);
+void ii_api_savepoint (II_CONN *ii_conn, VALUE savePtName);
+void ii_free_savePtEntries (II_SAVEPOINT_ENTRY *savePtEntry);
+
+/* Transaction control */
+VALUE ii_commit (VALUE param_self);
+VALUE ii_rollback (int param_argc, VALUE * param_argv, VALUE param_self);
+VALUE ii_savepoint (VALUE param_self, VALUE param_savepointName);
+VALUE ii_savepoint_name(II_CONN *ii_conn, char *statement);
 
 /* Memory Allocation/Deallocation */
 void *ii_allocate (size_t nitems, size_t size);
