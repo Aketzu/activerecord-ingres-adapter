@@ -38,6 +38,32 @@
 **                      decimal, bigint.  Removed unref'd processShortField().
 **                      Change INT2NUM->INT2FIX where feasible for performance.
 **                      Add support for Ingres ANSI date/time datatypes.
+**              09/30/09 (grant.croker@ingres.com)
+**                      Add support for multiple active connections
+**                      replaced all calls to ii_allocate()/ii_reallocate() 
+**                      with their ruby counterparts ALLOC_N and REALLOC_N
+**                        Except for memory allocation in getColumn()
+**                      Added a SQL query classifier to eliminate the need 
+**                      to force the query into upper case
+**                      Moved Unicode functionality into Unicode.c and Unicode.h
+**                      Moved defines/typedefs/function prototypes into Ingres.h
+**                      Ingres.connect() takes an optional username/password
+**                        eliminates the need for connect_with_credentials 
+**                      (now an alias pointing to connect)
+**                      Ingres.execute() now accepts a variable number of parameters,
+**                      requires query but parameter values is optional
+**                      Ingres.pexecute() now an alias for Ingres.execute()
+**                      Re-formatted the code using astyle (http://astyle.sourceforge.net/)
+**                      Added the following Ruby constants
+**                        VERSION - version string, e.g. "1.4.0-dev"
+**                        API_LEVEL - value for IIAPI_VERSION
+**                        REVISION - the SVN revision for the driver
+**              10/08/09 (grant.croker@ingres.com)
+**                      Add support for the SQL SAVEPOINT statement
+**                      Fix a regression where certain query would return no data
+**              10/27/09 (grant.croker@ingres.com)
+**                      Convert date values to IIAPI_VCH_TYPE to avoid space padded strings
+**                      
  */
 
 #include "ruby.h"
@@ -2175,7 +2201,7 @@ processDateField (IIAPI_DATAVALUE * param_columnData, int param_dataType)
   convertParm.cv_srcValue.dv_length = param_columnData->dv_length;
   convertParm.cv_srcValue.dv_value = param_columnData->dv_value;
 
-  convertParm.cv_dstDesc.ds_dataType = IIAPI_CHA_TYPE;
+  convertParm.cv_dstDesc.ds_dataType = IIAPI_VCH_TYPE;
   convertParm.cv_dstDesc.ds_nullable = FALSE;
   convertParm.cv_dstDesc.ds_length = dateStrLen;
   convertParm.cv_dstDesc.ds_precision = 0;
@@ -2192,9 +2218,9 @@ processDateField (IIAPI_DATAVALUE * param_columnData, int param_dataType)
   dateStr[convertParm.cv_dstValue.dv_length] = '\0';
   if (ii_globals.debug)
     printf ("%s: Converted the DATE/TIME field >>%s<< to the string >>%s<<\n",
-            function_name, (char *)param_columnData->dv_value, dateStr);
+            function_name, (char *)param_columnData->dv_value, dateStr + 2);
 
-  returnValue = rb_str_new (dateStr, convertParm.cv_dstValue.dv_length);
+  returnValue = rb_str_new (dateStr + 2, *(II_INT2 *)dateStr);
 
   if (ii_globals.debug)
     printf ("Exiting %s.\n", function_name);
@@ -2793,14 +2819,7 @@ ii_api_get_data (II_CONN *ii_conn, IIAPI_GETDESCRPARM * param_descrParm)
 
     if (!done)
     {
-      if ( param_descrParm->gd_descriptorCount == 1 )
-      {
-        rb_ary_push (ii_conn->resultset, rb_ary_pop(values));
-      }
-      else
-      {
-        rb_ary_push (ii_conn->resultset, values);
-      }
+      rb_ary_push (ii_conn->resultset, values);
     }
   }
 
