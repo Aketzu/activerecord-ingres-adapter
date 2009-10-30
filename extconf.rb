@@ -23,9 +23,12 @@ elsif ENV["II_SYSTEM"] # fallback
     if RUBY_PLATFORM !~ /mswin32/
 	libdir = ENV["II_SYSTEM"] + "/ingres/lib"
         $LDFLAGS += " -L#{libdir}"
-        $LDFLAGS += " -lq.1 -lcompat.1 -lframe.1 -lrt -liiapi.1"
+        $LDFLAGS += " -lq.1 -lcompat.1 -lframe.1 -liiapi.1"
         if RUBY_PLATFORM =~ /solaris/
             $LDFLAGS += " -lsocket"
+        end
+        if RUBY_PLATFORM =~ /linux/
+            $LDFLAGS += " -lrt"
         end
     else
 	libdir = "#{ENV["II_SYSTEM"]}\\ingres\\lib"

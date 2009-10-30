@@ -1,4 +1,5 @@
 SVN
+- Fix #489 - librt.so should only be used on Linux
 - Use IIAPI_VCH_TYPE for converting date values to their string form
 - Add support for the SQL SAVEPOINT statement
 - Fix a regression where certain query would return no data
