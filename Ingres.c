@@ -81,7 +81,7 @@ II_GLOBALS ii_globals;
 II_LONG global_rows_affected = 0;
 
 extern u_i2 *CM_AttrTab;
-char *CM_CaseTab;
+extern char *CM_CaseTab;
 
 /* static int ii_sync(IIAPI_GENPARM *genParm)
  * Waits for completion of the last Ingres api call used because of the asynchronous design of this api
