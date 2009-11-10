@@ -39,6 +39,23 @@
 #           Required for the ActiveRecord base unit tests
 #       07/02/08 (grant.croker@ingres.com)
 #           Fix data truncation for the ActiveRecord :text type
+#       10/16/09 (grant.croker@ingres.com)
+#           Add support for handling the DECIMAL type
+#       10/16/09 (grant.croker@ingres.com)
+#           Fix up primary key detection with sequence numbers. This 
+#           assumes that the primary key column is defined using
+#           the following syntax:
+#                col integer not null default sequence.nextval primary key
+#       10/16/09 (grant.croker@ingres.com)
+#           Eliminate ORDER BY in a sub-SELECT for an UPDATE since Ingres
+#           does not support them in an UPDATE statement
+#       10/16/09 (grant.croker@ingres.com)
+#           Ingres does not support "col IN (NULL)" as part of a where clause
+#           this has been re-written to be "col is NULL"
+#       11/04/09 (grant.croker@ingres.com)
+#           Added the configuration option ':use_sequence_for_identity' to direct
+#           the adapter to use sequence numbers for the identity column
+#            
 #++
 
 
@@ -48,7 +65,7 @@ require 'pp'
 
 #debug print routines
 
-PRINT_TRACES = false
+PRINT_TRACES = FALSE
 
 def debug_level
    return 0
@@ -80,6 +97,8 @@ module ActiveRecord
 
          ing = Ingres.new
 
+         #ing.set_debug_flag("GLOBAL_DEBUG","TRUE")
+
          config = config.symbolize_keys
 
          if config.has_key?(:database)
@@ -98,7 +117,7 @@ module ActiveRecord
          end
 
          #return the connection adapter
-         ConnectionAdapters::IngresAdapter.new(conn, logger)
+         ConnectionAdapters::IngresAdapter.new(conn, logger, config)
       end
    end
 
@@ -107,7 +126,6 @@ module ActiveRecord
       class IngresColumn < Column #:nodoc:
 
          def value_to_boolean (str)
-
             if(str.to_i==0)
                return 0
             else
@@ -131,6 +149,7 @@ module ActiveRecord
             when :string    then value
             when :text      then value
             when :float     then value.to_f
+            when :decimal   then self.class.value_to_decimal(value)
             when :binary    then self.class.binary_to_string(value)
             when :boolean   then self.class.value_to_boolean(value)
             when :integer   then value.to_i rescue value ? 1 : 0
@@ -142,7 +161,6 @@ module ActiveRecord
                if(@name =~ /_time$/ ) then
                   value=value[11,19]
                   value = "2000-01-01 " << value
-                  #res = self.class.string_to_dummy_time(value)
                   res = Time.parse(value)
                else
                   res = self.class.string_to_date(value)
@@ -160,6 +178,7 @@ module ActiveRecord
             when :text      then nil
             when :integer   then "(#{var_name}.to_i rescue #{var_name} ? 1 : 0)"
             when :float     then "#{var_name}.to_f"
+            when :decimal   then "#{self.class.name}.value_to_decimal(#{var_name})}"
             when :datetime  then "#{self.class.name}.string_to_time(#{var_name})"
             when :timestamp then "#{self.class.name}.string_to_time(#{var_name})"
             when :time      then "#{self.class.name}.string_to_dummy_time(#{var_name})"
@@ -167,7 +186,6 @@ module ActiveRecord
             when :boolean   then "#{self.class.name}.value_to_boolean(#{var_name})"
 
             when :date
-               #str = "#{self.class.name}.string_to_date(#{var_name})"
                str = "if(@name =~ /_time$/ ) then \n"
                str << " #{var_name}=#{var_name}[11,19] \n"
                str << " value = '2000-01-01' << #{var_name} \n"
@@ -175,41 +193,54 @@ module ActiveRecord
                str << " else \n"
                str << " res = #{self.class.name}.string_to_date(#{var_name}) \n"
                str << " end\n"
-               # puts "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
-               # puts ">>#{str}<<"
-
                str
             else nil
             end
          end
 
 
-         private
+      private
+
+         def extract_limit(sql_type)
+           case sql_type
+           when /^bigint/i;    8
+           when /^smallint/i;  2
+           else super
+           end
+         end
+
          def simplified_type(field_type)
             complete_trace(" in simplified_type(#{field_type}) ")
             case field_type
-            when /INTEGER/
-               :integer
-            when /FLOAT|MONEY/
-               :float
-            when /BOOLEAN/
-               :boolean
-            when /VARCHAR/
-               :string
-            when /CHAR/
-               :string
-            when /ANSIDATE/
-               :date
-            when /DATE|INGRESDATE/
-               :datetime
-            when /TIMESTAMP/
-               :timestamp
-            when /TIME/
-               :time
-            when /INTERVAL/    # No equivalent in Rails
-               :string
+               when /INTEGER/
+                  :integer
+               when /FLOAT/
+                  :float
+               when /DECIMAL/
+                  extract_scale(field_type) == 0 ? :integer : :decimal
+               when /MONEY/
+                  :decimal
+               when /BOOLEAN/
+                  :boolean
+               when /VARCHAR/
+                  :string
+               when /CHAR/
+                  :string
+               when /ANSIDATE/
+                  :date
+               when /DATE|INGRESDATE/
+                  :datetime
+               when /TIMESTAMP/
+                  :timestamp
+               when /TIME/
+                  :time
+               when /INTERVAL/    # No equivalent in Rails
+                  :string
+               else
+                  super
             end
          end
+
       end
 
 
@@ -222,11 +253,18 @@ module ActiveRecord
       # * <tt>:password</tt> - Optional-Defaults to nothing
       # * <tt>:database</tt> - The name of the database. No default, must be provided.
       #
-      # Maintainer: jared@jaredrichardson.net
+      # Author: jared@jaredrichardson.net
+      # Maintainer: bruce.lunsford@ingres.com
+      # Maintainer: grant.croker@ingres.com
       #
       class IngresAdapter < AbstractAdapter
          def adapter_name
-            'Ingres'
+            'Ingres'.freeze
+         end
+
+         def initialize(connection, logger, config)
+            super(connection, logger)
+            @config = config
          end
 
          def native_database_types
@@ -242,8 +280,57 @@ module ActiveRecord
                :time        => { :name => "time" },
                :date        => { :name => "ansidate" }, #"date" pre-ansidate
                :binary      => { :name => "blob" },
-               :boolean     => { :name => "tinyint" }
+               :boolean     => { :name => "tinyint" },
+               :decimal     => { :name => "decimal" }
             }
+         end
+
+         # Ingres supports a different SQL syntax for column type definitions
+         # For example with other vendor DBMS engines it's possible to specify the
+         # number of bytes in an integer column - e.g. INTEGER(3)
+         #
+         # In addition it would appear that the following syntax is not valid for Ingres
+         # colname DECIMAL DEFAULT xx.yy
+         # where as
+         # colname DECIMAL
+         # is valid. It would appear we need to supply the precision and scale when providing
+         # a default value.
+         def type_to_sql(type, limit = nil, precision = nil, scale = nil)
+           complete_trace(" in type_to_sql(#{type.to_sym}, #{limit}, #{precision}, #{scale}) ")
+           case type.to_sym
+             when :integer;
+               case limit
+                 when 1..2;      return 'smallint'
+                 when 3..4, nil; return 'integer'
+                 when 5..8;      return 'bigint'
+                 else raise(ActiveRecordError, "No integer type has byte size #{limit}. Use a numeric with precision 0 instead.")
+               end
+             when :boolean; return 'tinyint'
+             when :decimal;
+               complete_trace(" handling a decimal")
+               if precision.nil? then
+                 # Ingres requires the precision/scale be defined
+                 return 'decimal (39,15)'
+               else
+                 return "decimal (#{precision},#{scale})"
+               end
+             else
+               return super
+             end
+         end
+
+         #Fetch the column used as a primary key in the join
+         def primary_key(table)
+            complete_trace(" in primary_key(#{table}) ")
+            sql =  "SELECT column_name "
+            sql << "FROM iicolumns, iiconstraints "
+            sql << "WHERE iiconstraints.table_name = '#{table}' "
+            sql << "AND   iiconstraints.constraint_name = iicolumns.table_name " 
+            sql << "AND   iiconstraints.constraint_type = 'P' "
+            sql << "AND   iicolumns.column_name != 'tidp' "
+            sql << "ORDER BY iicolumns.column_sequence "
+            primary_key = @connection.execute(sql).first
+            primary_key
          end
 
          def get_data_size(id)
@@ -260,10 +347,33 @@ module ActiveRecord
             res
          end
 
+         # Can this adapter determine the primary key for tables not attached
+         # to an ActiveRecord class, such as join tables?  Backend specific, as
+         # the abstract adapter always returns +false+.
+         def supports_primary_key?
+            true
+         end
+
+         # Does this adapter support DDL rollbacks in transactions?  That is, would
+         # CREATE TABLE or ALTER TABLE get rolled back by a transaction?
+         def supports_ddl_transactions?
+           true
+         end
+      
+         # Does this adapter support savepoints?
+         # We do but there is no delete/release savepoint feature which
+         # is needed by ActiveRecord
+         def supports_savepoints?
+           false
+         end
+
          def supports_migrations?
             true
          end
 
+         # Should primary key values be selected from their corresponding
+         # sequence before the insert statement?  If true, next_sequence_value
+         # is called before each insert to set the record's primary key.
          def prefetch_primary_key?(table_name = nil)
             true
          end
@@ -277,61 +387,38 @@ module ActiveRecord
             complete_trace(" in next_sequence_value ")
 
             ary = sequence_name.split(' ')
-            if (!ary[1]) then
-               ary[0] =~ /(\w+)_nonstd_seq/
-               ary[0] = $1
-               if( ary[1]== nil) then
-                  ary[1]=get_primary_key
+
+            if use_table_sequence? then
+               next_value = next_identity_for_table(ary[0])
+            else
+               if (!ary[1]) then
+                  ary[0] =~ /(\w+)_nonstd_seq/
+                  ary[0] = $1
+                  if( ary[1]== nil) then
+                     last_identity = last_identity_for_table($1) 
+                  end
+               else
+                  last_identity = last_identity_for_table(ary[0]) 
                end
-            end
-
-            # ary[0] is the table name (e.g. ary[0]=topics)
-            # ary[1] is the index column (e.g. ary[1]=id)
-
-            # @connection.unique_row_id(ary[0], ary[1])
-
-            result_set = @connection.execute("select MAX ( #{ary[1]} ) FROM #{ary[0]} ")
-            inner_result_set = result_set[0]
-            max_id = inner_result_set[0]
-            if (max_id==1) then
-               # be sure this isn't an empty table
-               # the code that returns ints can return a 1 if the number is
-               # invalid or undefined. We want to be sure a 1 is really a 1
-               table_count = @connection.execute("select COUNT (*) FROM #{ary[0]} ")
-               table_count_inner_result_set = table_count[0]
-               actual_table_count = table_count_inner_result_set[0]
-               if(actual_table_count == 0) then
-                  # the table is empty. Set the id field to be one
+               if last_identity == "NULL"
                   next_value = 1
                else
-                  # the table isn't empty, which means the MAX id is really 1.
-                  # that means the table has a single entry. We should set the next
-                  # entry to be 2
-                  next_value = 2
+                  next_value = last_identity + 1
                end
-            else
-               max_id = 0 if max_id == "NULL"
-               next_value = max_id + 1
             end
-            if (next_value == nil) then
-               puts "\n\n((((((((((((((( next_sequence_value returning nil \n\n"
-            end
-            if (next_value == 0) then
-               puts "\n\n((((((((((((((( next_sequence_value returning 0 \n\n"
-            end
-            return next_value
+            next_value
          end
 
+         # Should we use sequence defined in the default value
+         def use_table_sequence?
+            if @config.has_key? :use_sequence_for_identity then
+               return @config[:use_sequence_for_identity] 
+            else
+               return FALSE
+            end
+         end
 
          # QUOTING ==================================================
-
-         # COMMENT OUT following method for II_DATE_FORMAT=SWEDEN.
-         #def quoted_date(value)
-         # The following line is the original. It's from quoting.rb:
-         #    value.strftime("%Y-%m-%d %H:%M:%S")
-         # This fixed the date/time (US vs SWEDEN in II_DATE_FORMAT) issues -jrr
-         #  value.strftime("%m-%d-%Y %H:%M:%S")
-         #end
 
          def quote(value, column = nil)
             complete_trace(" in quote() ")
@@ -412,7 +499,7 @@ module ActiveRecord
                column_sql << ", " 
              end
            end
-           pk_col = get_primary_key(table_name)
+           pk_col = primary_key(table_name)
            # Backup the current table renaming the chosen column
            execute( <<-SQL_COPY, nil)
              DECLARE GLOBAL TEMPORARY TABLE session.table_copy AS
@@ -531,10 +618,8 @@ module ActiveRecord
             rows
          end
 
-         def insert(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil) #:nodoc:
-            complete_trace(" in insert(#{sql}, #{name}, #{pk}, #{id_value}, #{sequence_name}) ")
-            execute(sql, name)
-            update_nulls_after_insert(sql, name, pk, id_value, sequence_name)
+         def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil) #:nodoc:
+            super sql, name
             id_value
          end
 
@@ -556,7 +641,6 @@ module ActiveRecord
             out.puts exception_str(exc)
          end
 
-
          def my_print_exception(msg)
             begin
                raise msg
@@ -564,7 +648,6 @@ module ActiveRecord
                print_exception()
             end
          end
-
 
          def update(sql, name = nil) #:nodoc:
             complete_trace(" in update(#{sql}, #{name}) ")
@@ -578,7 +661,6 @@ module ActiveRecord
             return @connection.rows_affected
          end
 
-
          def execute(sql, name = nil) #:nodoc:
             complete_trace(" in execute(#{sql}, #{name}) ")
 
@@ -591,7 +673,12 @@ module ActiveRecord
             end
 
             sql = add_ordering(sql)
-            #sql = sql.gsub("\n", "\\n")
+
+            # Ingres does not like UPDATE statements that have a sub-SELECT that uses
+            # an ORDER BY
+            if sql =~ /^UPDATE/i then
+               sql.gsub!(/( ORDER BY.*)\)/,")") if sql =~ /SELECT.*( ORDER BY.*)\)/i 
+            end
 
             begin
                result = log(sql, name) { @connection.execute(sql) }
@@ -615,6 +702,7 @@ module ActiveRecord
 
             # TODO: clean up this hack
             sql.gsub!(" = NULL", " is NULL")
+            sql.gsub!(" IN (NULL)", " is NULL")
 
             # debug print
             if(1==2) then
@@ -655,21 +743,6 @@ module ActiveRecord
                rows = apply_limit_and_offset!(rows)
             end
 
-            # debug print block
-            if(1==2) then
-               puts "\n=============\n"
-               puts "the result set is:\n"
-               pp rows
-               puts "\n=============\n"
-            end
-
-            if(1==2 && rows[0] && rows[0].values_at("content")==["--- \n- one\n- two\n- three"]) then
-               # h = rows[0]
-               # h.delete("content")
-               # h.store("content", "--- \n- one\n- two\n- three\n")
-               # rows[0] = h
-            end
-
             return rows
          end
 
@@ -691,17 +764,18 @@ module ActiveRecord
          end
 
          def commit_db_transaction #:nodoc:
+            complete_trace("commit_db_transaction")
             execute("COMMIT")
          rescue Exception
             # Transactions aren't supported
          end
 
          def rollback_db_transaction #:nodoc:
+            complete_trace("rollback_db_transaction")
             execute "ROLLBACK"
          rescue Exception
             # Transactions aren't supported
          end
-         #=end
 
          # SCHEMA STATEMENTS ========================================
 
@@ -718,8 +792,7 @@ module ActiveRecord
          # Return the list of all tables in the schema search path.
          def tables(name = nil) #:nodoc:
             complete_trace(" in tables(#{name}) ")
-            tables = @connection.tables
-            #tables.reject! { |t| /\A_SYS_/ === t }
+            tables = @connection.tables.flatten
             tables
          end
 
@@ -730,7 +803,7 @@ module ActiveRecord
             sql << "WHERE table_name='#{table_name}' "
             sql << "ORDER BY column_sequence "
             columns = []
-            select_all(sql, name).each do |row|
+            execute_without_adding_ordering(sql, name).each do |row|
                default_value = default_value( row["column_default_val"])
                column_type = sql_type_name( row["column_datatype"], row["column_length"])
 
@@ -764,6 +837,7 @@ module ActiveRecord
          # for CREATE TABLE
          # TODO : add a server version check so as to only do this for Ingres 9.1.x and earlier.
          def add_column_options!(sql, options) #:nodoc:
+            complete_trace(" in add_column_options(#{sql}, #{options}) ")
             sql << " DEFAULT #{quote(options[:default], options[:column])}" if options_include_default?(options)
             # must explcitly check for :null to allow change_column to work on migrations
             if options.has_key? :null
@@ -776,7 +850,9 @@ module ActiveRecord
          end
 
          def get_ordering_field(table_name)
-            field = get_primary_key(table_name)
+
+            field = primary_key(table_name)
+
             if(!field) then
                # fetch some field from the table (or sql) to order
                # if need be, fetch another field here to order by...
@@ -1019,7 +1095,7 @@ module ActiveRecord
 
             def add_ordering (sql)
                complete_trace(" in add_ordering(#{sql}) ")
-               if(sql !~ /(SELECT)|(select)/)
+               if(sql !~ /^(SELECT)/i)
                   return sql
                end
 
@@ -1028,7 +1104,8 @@ module ActiveRecord
                table_array = from_stmnt.to_s.scan(/\w+/)
                table_name = table_array[1]
 
-               ordering_field = get_ordering_field(table_name)
+               # Get the primary key column name if we have a table to look at
+               ordering_field = get_ordering_field(table_name) if table_name != nil
                if(ordering_field==nil) then
                   return sql
                end
@@ -1059,7 +1136,12 @@ module ActiveRecord
                               # TODO: Is this right? It reads backwards (if it's working)
                               # retool to read properly -jrr
                               if (sql==found_select_star) then
-                                 sql.gsub!("SELECT", "SELECT #{ordering_field}, ")
+                                 # we need to handle table aliases of the form
+                                 # FROM table t1
+                                 # for the time being this is commented out as it causes 
+                                 # test_query_attribute_with_custom_fields to fail as it contains
+                                 # custom SQL
+                                 #sql.gsub!("SELECT", "SELECT #{table_name}.#{ordering_field}, ")
                               end
                            else
                               # we have a query with a "FIRST N" in it.
@@ -1078,6 +1160,69 @@ module ActiveRecord
                end
                #puts "\n sql coming exiting is:\n#{sql}\n\n"
                sql
+            end
+
+            # Get the last generate identity/auto_increment/sequence number generated
+            # for a given table
+            def last_identity_for_table(table)
+               if table != nil then
+                  identity_col = primary_key(table)
+                  sql = "SELECT max(#{identity_col}) "
+                  sql << "FROM #{table}"
+                  last_identity = @connection.execute(sql)[0][0]
+               else
+                  last_identity = 0
+               end
+               last_identity
+            end
+            
+            def next_identity_for_table(table)
+               if table != nil then
+                  identity_col = primary_key(table)
+                  if identity_col != nil then
+                     sequence_name = table_sequence_name(table,identity_col)
+                     if sequence_name != nil
+                        sql = "SELECT #{sequence_name}.nextval"
+                        next_identity = @connection.execute(sql)[0][0]
+                        # Test for a value which is <= the max value already there
+                        # to avoid possible duplicate key values
+                        sql = "SELECT max(#{identity_col}) from #{table}"
+                        max_id = @connection.execute(sql)[0][0]
+                        max_id = 0 if max_id == "NULL"
+                        until next_identity > max_id
+                           sql = "SELECT #{sequence_name}.nextval"
+                           next_identity = @connection.execute(sql)[0][0]
+                        end
+                        @identity_value = next_identity
+                     else
+                        next_identity = last_identity_for_table(table) + 1
+                     end
+                  else
+                     next_identity = 1
+                  end
+               else
+                  next_identity = 1
+               end
+               next_identity
+            end
+
+            # Get the last generate identity/auto_increment/sequence number generated
+            # for a given insert statement
+            def last_identity_for_insert(sql)
+               puts "In last_identity_for_insert()"
+               sql =~ /INSERT INTO "(\w+)" .*/m 
+               last_identity_for_table($1)
+            end
+
+            # Get the sequence name used in the table
+            def table_sequence_name(table, column)
+               sql = "SELECT column_default_val "
+               sql << "FROM iicolumns "
+               sql << "WHERE table_name = '#{table}' "
+               sql << "  AND column_name = '#{column}'"
+               default = @connection.execute(sql)[0][0]
+               default =~ /next value for "(\w+)"\."(\w+)"/m
+               sequence_name = $2
             end
 
             def update_nulls_after_insert(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
@@ -1107,4 +1252,4 @@ module ActiveRecord
       end
    end
 
-#vim: ts=2 sw=2 expandtab
+# vim: ts=3 sw=3 expandtab
