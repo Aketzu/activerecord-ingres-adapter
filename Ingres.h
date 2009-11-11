@@ -21,8 +21,11 @@
 **      INGRES.H
 **
 **      History
-**              24-Aug-2009 (Grant.Croker@ingres.com)
+**              08/24/2009 (grant.croker@ingres.com)
 **                  Created
+**              11/09/2009 (grant.croker@ingres.com)
+**                  Add the ability to set the date format for Ingres date values
+**                  from within Ruby 
 */
 
 /* Constants */
@@ -132,6 +135,26 @@ static struct
   { "ROLLBACK TO", INGRES_SQL_ROLLBACK_TO, 11 },
 };
 
+#define INGRES_NO_CONN_PARAMS  1
+static struct
+{
+  char *paramName;
+  II_LONG paramID;
+} CONN_PARAMS [INGRES_NO_CONN_PARAMS] =
+{
+  {"date_format", IIAPI_CP_DATE_FORMAT },  /* for SELECT VARCHAR(date_col) */
+};
+
+#define INGRES_NO_ENV_PARAMS  1
+static struct
+{
+  char *paramName;
+  II_LONG paramID;
+} ENV_PARAMS [INGRES_NO_ENV_PARAMS] =
+{
+  {"date_format", IIAPI_EP_DATE_FORMAT },  /* for SELECT date_col */
+};
+
 /* Cursor Modes */
 #define INGRES_CURSOR_READONLY 0
 #define INGRES_CURSOR_UPDATE 1
@@ -228,6 +251,9 @@ void ii_api_rollback (II_CONN *ii_conn, II_SAVEPOINT_ENTRY *savePtEntry);
 void ii_api_disconnect( II_CONN *ii_conn);
 void ii_api_savepoint (II_CONN *ii_conn, VALUE savePtName);
 void ii_free_savePtEntries (II_SAVEPOINT_ENTRY *savePtEntry);
+
+void ii_api_set_connect_param (II_CONN *ii_conn, II_LONG paramID, VALUE paramValue);
+void ii_api_set_env_param (II_LONG paramID, VALUE paramValue);
 
 /* Transaction control */
 VALUE ii_commit (VALUE param_self);

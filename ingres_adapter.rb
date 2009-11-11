@@ -55,6 +55,10 @@
 #       11/04/09 (grant.croker@ingres.com)
 #           Added the configuration option ':use_sequence_for_identity' to direct
 #           the adapter to use sequence numbers for the identity column
+#       11/10/09 (grant.croker@ingres.com)
+#           Set the connection :date_format to Ingres::DATE_FORMAT_FINLAND
+#           eliminating the need to configure II_DATE_FORMAT in the local 
+#           environment
 #            
 #++
 
@@ -107,14 +111,13 @@ module ActiveRecord
             raise ArgumentError, "No database specified. Missing argument: database."
          end
 
-         if config.has_key?(:username)
-            username = config[:username].to_s
-            password = config[:password].to_s
-            conn = ing.connect_with_credentials(database, username, password)
-         else
-            # ingres allows a local connection w/o username and password
-            conn = ing.connect(database)
+         # Set the date format so that INGRESDATE values are returned in the format
+         # YYYY-MM-DD HH:MM:SS. This way we simplify the setup process for RoR apps
+         config[:date_format] = Ingres::DATE_FORMAT_FINLAND
+         if config.has_key?(:username) && !config.has_key?(:password)
+            raise ArgumentError, "Username supplied without a password, unable to proceed"
          end
+         conn = ing.connect(config)
 
          #return the connection adapter
          ConnectionAdapters::IngresAdapter.new(conn, logger, config)

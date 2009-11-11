@@ -63,6 +63,9 @@
 **                      Fix a regression where certain query would return no data
 **              10/27/09 (grant.croker@ingres.com)
 **                      Convert date values to IIAPI_VCH_TYPE to avoid space padded strings
+**              11/09/2009 (grant.croker@ingres.com)
+**                      Add the ability to set the date format for Ingres date values
+**                      from within Ruby.
 **                      
  */
 
@@ -454,6 +457,85 @@ ii_checkError (IIAPI_GENPARM * param_genParm)
   return ret_val;
 }
 
+void
+ii_api_set_connect_param (II_CONN *ii_conn, II_LONG paramID, VALUE paramValue)
+{
+  IIAPI_SETCONPRMPARM    setConPrmParm;
+  II_LONG tmp_long = 0;
+  char function_name[] = "ii_api_set_connect_param";
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  setConPrmParm.sc_genParm.gp_callback = NULL;
+#if defined(IIAPI_VERSION_2)
+  setConPrmParm.sc_connHandle = ii_globals.envHandle;
+#else
+  setConPrmParm.sc_connHandle = NULL;
+#endif
+  setConPrmParm.sc_paramID = paramID;
+
+  switch (TYPE(paramValue))
+  {
+    case T_STRING:
+      setConPrmParm.sc_paramValue = RSTRING_PTR(paramValue);
+      break;
+    case T_FIXNUM:
+      tmp_long = FIX2LONG(paramValue);
+      setConPrmParm.sc_paramValue = (II_PTR)&tmp_long;
+      break;
+    default:
+      rb_raise(rb_eArgError, "Unable to handle an option value of type %d", TYPE(paramValue));
+  }
+
+  IIapi_setConnectParam(&setConPrmParm);
+  ii_sync (&(setConPrmParm.sc_genParm));
+  ii_checkError (&setConPrmParm.sc_genParm);
+
+  ii_conn->connHandle = setConPrmParm.sc_connHandle;
+
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+
+}
+
+  
+void
+ii_api_set_env_param (II_LONG paramID, VALUE paramValue)
+{
+  IIAPI_SETENVPRMPARM    setEnvPrmParm;
+  II_LONG tmp_long = 0;
+  char function_name[] = "ii_api_set_env_param";
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  setEnvPrmParm.se_envHandle = ii_globals.envHandle;
+  setEnvPrmParm.se_paramID = paramID;
+
+  switch (TYPE(paramValue))
+  {
+    case T_STRING:
+      setEnvPrmParm.se_paramValue = RSTRING_PTR(paramValue);
+      break;
+    case T_FIXNUM:
+      tmp_long = FIX2LONG(paramValue);
+      setEnvPrmParm.se_paramValue = (II_PTR)&tmp_long;
+      break;
+    default:
+      rb_raise(rb_eArgError, "Unable to handle an option value of type %d", TYPE(paramValue));
+  }
+
+  IIapi_setEnvParam (&setEnvPrmParm);
+  if (setEnvPrmParm.se_status != 0)
+  {
+    rb_raise(rb_eRuntimeError, "An error occurred when calling IIapi_setEnvParam, status returned was %d", setEnvPrmParm.se_status);
+  }
+
+  if (ii_globals.debug)
+    printf ("Exiting %s.\n", function_name);
+
+}
 
 void
 ii_api_connect (II_CONN *ii_conn, char *param_targetDB, char *param_username, char *param_password)
@@ -505,19 +587,106 @@ ii_api_connect (II_CONN *ii_conn, char *param_targetDB, char *param_username, ch
 
 /* connects to the database */
 VALUE
-ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
+ii_set_environment (int param_argc, VALUE *param_argv, VALUE param_self)
 {
-  char function_name[] = "ii_connect";
-  VALUE param_targetDB;
-  VALUE param_username;
-  VALUE param_password;
-  II_CONN *ii_conn = NULL;
-  int db_length = 0;
+  char function_name[] = "ii_set_environment";
+  VALUE param_value = Qnil;
+  VALUE args,arg;
+  int param_no = 0;
 
   if (ii_globals.debug)
     printf ("Entering %s.\n", function_name);
 
-  rb_scan_args (param_argc, param_argv, "12", &param_targetDB, &param_username, &param_password);
+  rb_scan_args (param_argc, param_argv, "0*", &args);
+
+  if (RARRAY_LEN(args) == 1)
+  {
+    arg = rb_ary_entry(args,0);
+    if (TYPE (arg) == T_HASH)
+    {
+      for (param_no = 0; param_no < INGRES_NO_ENV_PARAMS; param_no++)
+      {
+        param_value = rb_hash_aref(arg, ID2SYM(rb_intern(ENV_PARAMS[param_no].paramName)));
+        if (TYPE(param_value) != T_NIL)
+        {
+          ii_api_set_env_param (ENV_PARAMS[param_no].paramID, param_value);
+        }
+      }
+    }
+    else
+    {
+      rb_raise(rb_eArgError, "Expected a hash of environment parameters");
+    }
+  }
+  else
+  {
+    rb_raise(rb_eArgError, "Expected a hash of environment parameters");
+  }
+
+  return param_self;
+}
+
+VALUE
+ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
+{
+  char function_name[] = "ii_connect";
+  VALUE param_targetDB;
+  VALUE param_username = Qnil;
+  VALUE param_password = Qnil;
+  VALUE param_value = Qnil;
+  VALUE args,arg;
+  II_CONN *ii_conn = NULL;
+  int db_length = 0;
+  int param_no = 0;
+
+  if (ii_globals.debug)
+    printf ("Entering %s.\n", function_name);
+
+  Data_Get_Struct(param_self, II_CONN, ii_conn);
+
+  rb_scan_args (param_argc, param_argv, "0*", &args);
+
+  if (RARRAY_LEN(args) == 1)
+  {
+    arg = rb_ary_entry(args,0);
+    if (TYPE (arg) == T_STRING)
+    {
+      /* Just have a database */
+      param_targetDB = arg;
+      param_username = rb_str_new2 ("");
+      param_password = rb_str_new2 ("");
+    }
+    else if (TYPE (arg) == T_HASH)
+    {
+      /* Ingres.connect({:dbname=>xxxx, :username => "xxxx", :password => "xxxx"}) */
+      param_targetDB = rb_hash_aref(arg, ID2SYM(rb_intern("database")));
+      param_username = rb_hash_aref(arg, ID2SYM(rb_intern("username")));
+      param_password = rb_hash_aref(arg, ID2SYM(rb_intern("password")));
+      
+      if (TYPE(param_targetDB) == T_NIL)
+      {
+        rb_raise(rb_eArgError, "Unable to connect without specifying a database");
+      }
+      for ( param_no = 0; param_no < INGRES_NO_ENV_PARAMS; param_no++)
+      {
+        param_value = rb_hash_aref(arg, ID2SYM(rb_intern(CONN_PARAMS[param_no].paramName)));
+        if (TYPE(param_value) != T_NIL)
+        {
+          ii_api_set_connect_param (ii_conn, CONN_PARAMS[param_no].paramID, param_value);
+        }
+      }
+    }
+  }
+  else if (RARRAY_LEN(args) == 3)
+  {
+    param_targetDB = rb_ary_entry(args,0);
+    param_username = rb_ary_entry(args,1);
+    param_password = rb_ary_entry(args,2);
+  }
+  else
+  {
+		rb_raise(rb_eArgError, "Expected one of: database, database + username/password or hash");
+  }
 
   /* If param_username and param_password are not supplied, convert them to an empty T_STRING */
   if ((TYPE (param_username) == T_NIL) && (TYPE (param_password) == T_NIL))
@@ -529,13 +698,26 @@ ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
   {
     /* Password is required when a username is supplied */
     /* This is a hacky way of aborting but will do until an IngresError Exception has been added */
-    Check_Type (param_password, T_STRING);
+    rb_raise(rb_eArgError, "A password is required when specifying a username");
   }
 
-  Data_Get_Struct(param_self, II_CONN, ii_conn);
+  ii_api_connect (ii_conn, RSTRING_PTR(param_targetDB), RSTRING_PTR(param_username), RSTRING_PTR(param_password));
 
-  ii_api_connect (ii_conn, StringValuePtr(param_targetDB), StringValuePtr(param_username), StringValuePtr(param_password));
-
+  if (RARRAY_LEN(args) == 1)
+  {
+    arg = rb_ary_entry(args,0);
+    if (TYPE (arg) == T_HASH)
+    {
+      for (param_no = 0; param_no < INGRES_NO_ENV_PARAMS; param_no++)
+      {
+        param_value = rb_hash_aref(arg, ID2SYM(rb_intern(ENV_PARAMS[param_no].paramName)));
+        if (TYPE(param_value) != T_NIL)
+        {
+          ii_api_set_env_param (ENV_PARAMS[param_no].paramID, param_value);
+        }
+      }
+    }
+  }
   db_length = strlen(StringValuePtr(param_targetDB));
 
   ii_conn->currentDatabase = ALLOC_N (char, db_length + 1);
@@ -2169,9 +2351,8 @@ VALUE
 processDateField (IIAPI_DATAVALUE * param_columnData, int param_dataType)
 {
   VALUE returnValue;
-  II_LONG paramvalue = IIAPI_EPV_DFRMT_ISO;
-  IIAPI_SETENVPRMPARM setEnvPrmParm;
   IIAPI_CONVERTPARM convertParm;
+  IIAPI_FORMATPARM formatParm;
   int dateStrLen = 260;
   char *dateStr = NULL;
   char function_name[] = "processDateField";
@@ -2184,38 +2365,34 @@ processDateField (IIAPI_DATAVALUE * param_columnData, int param_dataType)
     printf ("%s: Found a DATE or TIME field of type %d >>%s<<\n", function_name,
             param_dataType, (char *)(param_columnData->dv_value));
 
-  setEnvPrmParm.se_envHandle = ii_globals.envHandle;
-  setEnvPrmParm.se_paramID = IIAPI_EP_DATE_FORMAT;
-  setEnvPrmParm.se_paramValue = (II_PTR) (&paramvalue);
-  IIapi_setEnvParam (&setEnvPrmParm);
+  formatParm.fd_envHandle = ii_globals.envHandle;
+  formatParm.fd_srcDesc.ds_dataType = param_dataType;
+  formatParm.fd_srcDesc.ds_nullable = FALSE;
+  formatParm.fd_srcDesc.ds_length = param_columnData->dv_length;
+  formatParm.fd_srcDesc.ds_precision = 0;
+  formatParm.fd_srcDesc.ds_scale = 0;
+  formatParm.fd_srcDesc.ds_columnType = IIAPI_COL_QPARM;
+  formatParm.fd_srcDesc.ds_columnName = NULL;
 
-  convertParm.cv_srcDesc.ds_dataType = param_dataType;
-  convertParm.cv_srcDesc.ds_nullable = FALSE;
-  convertParm.cv_srcDesc.ds_length = param_columnData->dv_length;
-  convertParm.cv_srcDesc.ds_precision = 0;
-  convertParm.cv_srcDesc.ds_scale = 0;
-  convertParm.cv_srcDesc.ds_columnType = IIAPI_COL_QPARM;
-  convertParm.cv_srcDesc.ds_columnName = NULL;
+  formatParm.fd_srcValue.dv_null = FALSE;
+  formatParm.fd_srcValue.dv_length = param_columnData->dv_length;
+  formatParm.fd_srcValue.dv_value = param_columnData->dv_value;
 
-  convertParm.cv_srcValue.dv_null = FALSE;
-  convertParm.cv_srcValue.dv_length = param_columnData->dv_length;
-  convertParm.cv_srcValue.dv_value = param_columnData->dv_value;
+  formatParm.fd_dstDesc.ds_dataType = IIAPI_VCH_TYPE;
+  formatParm.fd_dstDesc.ds_nullable = FALSE;
+  formatParm.fd_dstDesc.ds_length = dateStrLen;
+  formatParm.fd_dstDesc.ds_precision = 0;
+  formatParm.fd_dstDesc.ds_scale = 0;
+  formatParm.fd_dstDesc.ds_columnType = IIAPI_COL_QPARM;
+  formatParm.fd_dstDesc.ds_columnName = NULL;
 
-  convertParm.cv_dstDesc.ds_dataType = IIAPI_VCH_TYPE;
-  convertParm.cv_dstDesc.ds_nullable = FALSE;
-  convertParm.cv_dstDesc.ds_length = dateStrLen;
-  convertParm.cv_dstDesc.ds_precision = 0;
-  convertParm.cv_dstDesc.ds_scale = 0;
-  convertParm.cv_dstDesc.ds_columnType = IIAPI_COL_QPARM;
-  convertParm.cv_dstDesc.ds_columnName = NULL;
+  formatParm.fd_dstValue.dv_null = FALSE;
+  formatParm.fd_dstValue.dv_length = dateStrLen;
+  formatParm.fd_dstValue.dv_value = dateStr;
 
-  convertParm.cv_dstValue.dv_null = FALSE;
-  convertParm.cv_dstValue.dv_length = dateStrLen;
-  convertParm.cv_dstValue.dv_value = dateStr;
+  IIapi_formatData (&formatParm);
 
-  IIapi_convertData (&convertParm);
-
-  dateStr[convertParm.cv_dstValue.dv_length] = '\0';
+  dateStr[formatParm.fd_dstValue.dv_length] = '\0';
   if (ii_globals.debug)
     printf ("%s: Converted the DATE/TIME field >>%s<< to the string >>%s<<\n",
             function_name, (char *)param_columnData->dv_value, dateStr + 2);
@@ -3211,7 +3388,6 @@ size_t STtrmwhite (register char *string)
   return nwl;
 }
 
-
 /* this routine is in for the Ruby integration */
 void
 Init_Ingres ()
@@ -3242,6 +3418,7 @@ Init_Ingres ()
   rb_define_method (cIngres, "rows_affected", ii_rows_affected, 0);
   rb_define_method (cIngres, "column_list_of_names", ii_column_names, 0);
   rb_define_method (cIngres, "data_sizes", ii_data_sizes, 0);
+  rb_define_method (cIngres, "set_environment", ii_set_environment, -1);
 
   /* Transaction Methods */
   rb_define_method (cIngres, "commit", ii_commit, 0);
@@ -3256,9 +3433,39 @@ Init_Ingres ()
   rb_define_method (cIngres, "crash_it", ii_crash_it, 0);
   rb_define_method (cIngres, "set_debug_flag", ii_set_debug_flag, 2);
 
+  /* Constants */
+
+  /* Date formats for Ingres.connect() / Ingres.set_environment() */
+  rb_define_const(cIngres,"DATE_FORMAT_DMY", INT2FIX(IIAPI_CPV_DFRMT_DMY));
+  rb_define_const(cIngres,"DATE_FORMAT_FINLAND", INT2FIX(IIAPI_CPV_DFRMT_FINNISH));
+  rb_define_const(cIngres,"DATE_FORMAT_GERMAN", INT2FIX(IIAPI_CPV_DFRMT_GERMAN));
+  rb_define_const(cIngres,"DATE_FORMAT_ISO", INT2FIX(IIAPI_CPV_DFRMT_ISO));
+  rb_define_const(cIngres,"DATE_FORMAT_ISO4", INT2FIX(IIAPI_CPV_DFRMT_ISO4));
+  rb_define_const(cIngres,"DATE_FORMAT_MDY", INT2FIX(IIAPI_CPV_DFRMT_MDY));
+  rb_define_const(cIngres,"DATE_FORMAT_MULTINATIONAL", INT2FIX(IIAPI_CPV_DFRMT_MULTI));
+  rb_define_const(cIngres,"DATE_FORMAT_MULTINATIONAL4", INT2FIX(IIAPI_CPV_DFRMT_MLT4));
+  rb_define_const(cIngres,"DATE_FORMAT_SWEDEN", INT2FIX(IIAPI_CPV_DFRMT_FINNISH));
+  rb_define_const(cIngres,"DATE_FORMAT_US", INT2FIX(IIAPI_CPV_DFRMT_US));
+  rb_define_const(cIngres,"DATE_FORMAT_YMD", INT2FIX(IIAPI_CPV_DFRMT_YMD));
+
+
   if (ii_globals.debug)
     printf ("Exiting %s.\n", function_name);
 }
+
+/********************************************************************
+ * 
+ * Document-class: Ingres
+ *
+ * The class to access the Ingres RDBMS via OpenAPI
+ *
+ * For example, to send query to the database 
+ *    require 'Ingres'
+ *    ing = Ingres.new()
+ *    ing.connect(:database => 'demodb')
+ *    result = ing.execute('SELECT * from user_profile')
+ *
+ */
 
 /* Allocate the II_CONN structure used to store connection state et. al. */
 static VALUE rb_ingres_alloc(VALUE klass)

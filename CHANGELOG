@@ -1,4 +1,7 @@
 SVN
+- Add Ingres.set_environment()
+- Add the ability to set the date format for ingresdate values at connection
+  time
 - Update ingres_adapter.rb for ActiveRecord 2.3.x
 - Fix #489 - librt.so should only be used on Linux
 - Use IIAPI_VCH_TYPE for converting date values to their string form
