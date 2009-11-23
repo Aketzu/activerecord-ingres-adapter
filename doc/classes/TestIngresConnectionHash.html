@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>: TestIngresConnectionHash [Ingres Ruby Documentation]</title>
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <link href='../rdoc-style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='class' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>
+          <span class='type'>Class</span>
+          TestIngresConnectionHash
+        </h1>
+        <ol class='paths'>
+          <li>
+            <a href="../files/tests/tc_connect_hash_rb.html">tests/tc_connect_hash.rb</a>
+          </li>
+        </ol>
+        <div class='parent'>
+          Parent:
+          <strong>Test::Unit::TestCase</strong>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='method-list'>
+            <h2>Methods</h2>
+            <h3>public instance</h3>
+            <ol>
+              <li><a href="#M000032">test_connect_hash</a></li>
+              <li><a href="#M000033">test_connect_hash_no_database</a></li>
+              <li><a href="#M000035">test_connect_hash_with_login_only</a></li>
+              <li><a href="#M000034">test_connect_hash_with_login_password</a></li>
+            </ol>
+          </div>
+          <div id='section'>
+            <div id='methods'>
+              <h2>Public instance methods</h2>
+              <div class='method public-instance' id='method-M000032'>
+                <a name='M000032'></a>
+                <div class='synopsis'>
+                  <span class='name'>test_connect_hash</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000032-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000032-source'><span class="ruby-comment cmt"># File tests/tc_connect_hash.rb, line 7</span>&#x000A;  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">test_connect_hash</span>&#x000A;    <span class="ruby-identifier">ing</span> = <span class="ruby-constant">Ingres</span>.<span class="ruby-identifier">new</span>()&#x000A;    <span class="ruby-identifier">assert_kind_of</span>(<span class="ruby-constant">Ingres</span>, <span class="ruby-identifier">ing</span>.<span class="ruby-identifier">connect</span>(<span class="ruby-identifier">:database</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@@database</span>), <span class="ruby-value str">&quot;conn is not an Ingres object&quot;</span>)&#x000A;  <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000033'>
+                <a name='M000033'></a>
+                <div class='synopsis'>
+                  <span class='name'>test_connect_hash_no_database</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000033-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000033-source'><span class="ruby-comment cmt"># File tests/tc_connect_hash.rb, line 12</span>&#x000A;  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">test_connect_hash_no_database</span>&#x000A;    <span class="ruby-identifier">ing</span> = <span class="ruby-constant">Ingres</span>.<span class="ruby-identifier">new</span>()&#x000A;    <span class="ruby-identifier">assert_raise</span> <span class="ruby-constant">ArgumentError</span> <span class="ruby-keyword kw">do</span>&#x000A;        <span class="ruby-identifier">ing</span>.<span class="ruby-identifier">connect</span>()&#x000A;    <span class="ruby-keyword kw">end</span>&#x000A;  <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000035'>
+                <a name='M000035'></a>
+                <div class='synopsis'>
+                  <span class='name'>test_connect_hash_with_login_only</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000035-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000035-source'><span class="ruby-comment cmt"># File tests/tc_connect_hash.rb, line 24</span>&#x000A;  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">test_connect_hash_with_login_only</span>&#x000A;    <span class="ruby-identifier">ing</span> = <span class="ruby-constant">Ingres</span>.<span class="ruby-identifier">new</span>()&#x000A;    <span class="ruby-identifier">assert_raise</span> <span class="ruby-constant">ArgumentError</span> <span class="ruby-keyword kw">do</span>&#x000A;        <span class="ruby-identifier">ing</span>.<span class="ruby-identifier">connect_with_credentials</span>(<span class="ruby-identifier">:database</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@@database</span>, <span class="ruby-identifier">:username</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@@username</span>)&#x000A;    <span class="ruby-keyword kw">end</span>&#x000A;  <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000034'>
+                <a name='M000034'></a>
+                <div class='synopsis'>
+                  <span class='name'>test_connect_hash_with_login_password</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000034-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000034-source'><span class="ruby-comment cmt"># File tests/tc_connect_hash.rb, line 19</span>&#x000A;  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">test_connect_hash_with_login_password</span>&#x000A;    <span class="ruby-identifier">ing</span> = <span class="ruby-constant">Ingres</span>.<span class="ruby-identifier">new</span>()&#x000A;    <span class="ruby-identifier">assert_kind_of</span>(<span class="ruby-constant">Ingres</span>, <span class="ruby-identifier">ing</span>.<span class="ruby-identifier">connect_with_credentials</span>(<span class="ruby-identifier">:database</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@@database</span>, <span class="ruby-identifier">:username</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@@username</span>, <span class="ruby-identifier">:password</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@@password</span>), <span class="ruby-value str">&quot;conn is not an Ingres object&quot;</span>)&#x000A;  <span class="ruby-keyword kw">end</span></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>

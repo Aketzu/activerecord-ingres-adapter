@@ -1,0 +1,477 @@
+= Ingres Ruby ActiveRecord Adapter/Driver Version 1.4.0
+
+== Welcome
+
+This readme contains all of the documentation on the Ingres Ruby drover and
+ActiveRecord adapter. ActiveRecord is the standard database
+access interface used by Ruby on Rails (RoR or Rails) applications.  Please
+review this README.rdoc before building or installing this software. We encourage
+users to test the software and provide feedback.
+
+== Overview
+
+There are two components to the Ingres support for Ruby:
+
+* Ingres ActiveRecord adapter
+* Ingres Ruby driver
+
+Both components are required for Rails applications using ActiveRecord,
+which is the standard Rails Object-to-Relations Mapping (ORM) interface. The
+adapter implements the ActiveRecord classes for Ingres; internally, it invokes the
+classes and methods in the driver to actually communicate with Ingres.
+The driver, while primarily intended to service the adapter, can also be
+invoked directly from any Ruby program to communicate with Ingres. The driver
+interface does not follow any standard API and may change in the future.
+
+To summarize, the ActiveRecord interface provides an object interface while the driver
+interface is a more direct SQL-level interface.
+
+==== New in This Release
+
+This is a major release that addresses the following:
+
+===== Ruby Driver
+- Add Ingres.set_environment()
+- Add the ability to set the date format for ingresdate values at connection
+  time
+- Fix #489 - librt.so should only be used on Linux
+- Use IIAPI_VCH_TYPE for converting date values to their string form
+- Add support for the SQL SAVEPOINT statement
+- Fix a regression where certain query would return no data
+- Add support for multiple active connections
+- replaced all calls to ii_allocate()/ii_reallocate() with their ruby
+  counterparts ALLOC_N and REALLOC_N
+  - Except for memory allocation in getColumn()
+- Added a SQL query classifier to eliminate the need to force the query into
+  upper case
+- Moved Unicode functionality into Unicode.c and Unicode.h
+- Moved defines/typedefs/function prototypes into Ingres.h
+- Added new unit tests directory
+- Ingres.connect() takes an optional username/password
+  - eliminates the need for connect_with_credentials (now an alias pointing to
+    connect)
+- Ingres.execute() now accepts a variable number of parameters, requires query
+  but parameter values is optional
+  - Ingres.pexecute() now an alias for Ingres.execute()
+- Re-formatted the code using astyle (http://astyle.sourceforge.net/)
+- Added the following Ruby constants
+  - VERSION - version string, e.g. "1.4.0-dev"
+  - API_LEVEL - value for IIAPI_VERSION
+  - REVISION - the SVN revision for the driver
+- CM_AttrTab should be defined as an extern
+- Improve Ingres library and header detection _ version 1.3.0
+- Add support for the null clause used in Ingres 9.1.x (and earlier)
+- Change status to Beta
+
+===== ActiveRecord Adapter
+- Update ingres_adapter.rb for ActiveRecord 2.3.x
+
+== Operating System Support
+
+This Ingres Ruby ActiveRecord adapter/driver supports all of the platforms
+supported by Ingres and Ruby, including:
+
+* Solaris
+* HP-UX
+* AIX
+* Linux
+* Windows
+
+== Installation Considerations
+
+To build and install the Ingres Ruby interface, the following components are
+required:
+
+* Ingres 2.6 or above. At a minimum, an Ingres client installation is required
+  on the same machine as the Ruby installation. For a list of Ingres binary and
+  source downloads, see http://esd.ingres.com.
+* Ruby, preferably at version 1.8.5 or later. Additional Ruby components or
+  related products (such as ActiveRecord or Rails) may also be required
+  depending on how Ruby will be used with Ingres. See below for details.
+* C compiler (for example, GNU/C on Linux and UNIX, or Microsoft Visual Studio
+  6 on Windows). The C compiler is not needed if using a pre-built version of
+  the Ingres Ruby driver.
+  Note: It's not possible to build Ruby extensions with newer versions of the
+  Visual Studio C compiler without making changes to the Ruby header files.
+* The Ingres Ruby ActiveRecord adapter source code and driver binary. The source code for
+  the driver is also needed if not using the pre-built binary.
+
+== General Considerations
+
+=== Syntax for the Ingres Ruby Driver
+
+Note: We do not recommend that production applications use this API since it is
+intended for use with the Ingres ActiveRecord adapter. The API may change in the 
+future. It is, however, useful for testing Ingres connectivity and functionality.
+Ruby program must have a <tt>require 'Ingres'</tt> statement to load in driver file.
+
+=== Driver Methods
+
+The table below lists the methods available in the Ingres Class. Click on the
+method name for more information and examples on usage.
+
+<table>
+<tr><td>*Method*<td>*Description*
+<tr><td>Ingres.new()<td>To instantiate a new Ingres object
+<tr><td>Ingres.column_list_of_names()<td>Returns the names of the columns in the result set 
+<tr><td>Ingres.commit()<td>Commit the current transacation
+<tr><td>Ingres.connect()<td>Connect to the specified database
+<tr><td>Ingres.current_database()<td>Returns name of the current database connected to
+<tr><td>Ingres.data_types()<td>Returns the data types of the columns in the result set
+<tr><td>Ingres.data_sizes()<td>Returns the data lengths of the columns in the result set
+<tr><td>Ingres.disconnect()<td>Disconnect from the associated database
+<tr><td>Ingres.execute()<td>Execute SQL queries
+<tr><td>Ingres.rollback()<td>Rollback to the start of the current transaction or
+<tr><td>Ingres.rows_affected()<td>Returns the number of rows affected by last execute()
+savepoint (if specified)
+<tr><td>Ingres.savepoint()<td>Create a savepoint using the supplied name
+<tr><td>Ingres.set_debug_flag()<td>Enable/disable debugging
+<tr><td>Ingres.set_environment()<td>Change environmental settings affecting
+<tr><td>Ingres.tables()<td>Returns list of all tables in the current database
+query behaviour
+</table>
+
+== Ingres ActiveRecord Adapter
+
+See Ruby ActiveRecord documentation: http://ar.rubyonrails.com for more
+information.
+
+=== ActiveRecord Type Mappings
+
+The following table shows the type mappings between Ingres, Ruby and
+ActiveRecord.
+
+<table>
+<tr><td>*ActiveRecord* *Type*<td>*Ruby* *Class*<td>*Ingres* *Type*<td>*Notes*
+<tr><td>:primary_key<td><td>INTEGER NOT NULL PRIMARY KEY<td>
+<tr><td>:string<td>String<td>CHAR, NCHAR, VARCHAR, NVARCHAR,INTERVAL<td>
+<tr><td>:text<td>String<td>VARCHAR(32000)<td>
+<tr><td>:boolean<td>Boolean<td>INTEGER1<td>
+<tr><td>:integer<td>Fixnum<td>INTEGER2|4|8<td>
+<tr><td><td>Bignum<td>if INTEGER4|8 won't fit in Fixnum<td>
+<tr><td>:float<td>Float<td>FLOAT4, FLOAT8, MONEY<td>
+<tr><td>:decimal<td>String<td>DECIMAL<td>
+<tr><td>:date<td>Date<td>ANSIDATE<td>Ingres 9.1.0 or later
+<tr><td>:datetime<td>Time<td>DATE, INGRESDATE<td>
+<tr><td>:time<td>Time<td>TIME<td>Ingres 9.1.0 or later
+<tr><td>:timestamp<td>Time<td>TIMESTAMP<td>Ingres 9.1.0 or later
+</table>
+
+Note that the :binary ActiveRecord type is missing due to the lack of support
+for Ingres LONG BYTE, LONG VARCHAR support.
+
+== Building and Installing the Ingres Ruby Driver and ActiveRecord Adapter
+
+=== Downloading the Source Code
+
+The source code for the Ingres Ruby driver is kept in a Subversion repository
+at http://code.ingres.com. In order to download the source you will need an SVN
+client. Below is a list of some of the clients available for working with
+Subversion:
+
+* Windows - TortoiseSVN - http://tortoisesvn.tigris.org
+* Linux - "subversion" package for your distribution
+* Unix - Build from sources http://subversion.tigris.org
+* OS X
+  * Subversion from http://www.macports.org
+  * Versions from http://www.versionsapp.com
+
+
+To download the source you need to specify the following URL when performing a
+checkout:
+
+  http://code.ingres.com/ingres/drivers/ruby
+
+For example if using the command line Subversion client 'svn' the following
+will check out all the code for the Ingres Ruby driver:
+
+  svn co http://code.ingres.com/ingres/drivers/ruby/
+
+This will download the complete tree for the Ruby driver into the directory
+'ruby'. If you are only interested in the 'main' code line use the following
+command:
+
+  svn co http://code.ingres.com/ingres/drivers/ruby/main/ ruby-main
+
+Note that an additional parameter of 'ruby-main' has been specified. The code
+for http://code.ingres.com/ingres/drivers/ruby/main/ will be extracted in to
+this directory. Otherwise the checkout will download the code into a directory
+named 'main'. For more information on working with Ingres source code control
+system see - http://community.ingres.com/wiki/Connectivity_Drivers_Source_Code
+
+== Ingres Ruby Driver
+
+A binary version of the driver is provided for Windows (Ingres.so) at
+http://esd.ingres.com. If using the provided binary, skip to the install step below.
+The driver can also be built from the source provided (Ingres.c). To build and
+install the Ingres Ruby driver, the following components are needed AND MUST BE
+IN YOUR PATH:
+
+* Ingres installation
+* C compiler (for example, GNU/C on Linux and UNIX, or Microsoft Visual Studio
+  6 on Windows).
+
+=== To build the driver
+
+1. Copy source Ingres.c and extconf.rb to your build directory (anywhere).
+2. Create the makefile using the supplied extconf.rb script. By default the
+   script uses the environment variable _II_SYSTEM_ to determine which Ingres
+   installation to use.
+
+       ruby extconf.rb
+
+   You can use the flags: <tt>--with-ingres-include</tt> and
+   <tt>--with-ingres-lib</tt> to build against another Ingres installation:
+
+       ruby extconf.rb  --with-ingres-include="C:\IngresN3\ingres\files" --with-ingres-lib="C:\IngresN3\ingres\lib"
+
+   A sample createMake.bat has been included for Windows. The output should 
+   look similar to the following:
+
+       $ ruby extconf.rb 
+       Start extconf.rb
+       Using II_SYSTEM=/opt/Ingres/R3
+       checking for iiapi.h... yes
+       checking for main() in -liiapi... yes
+       creating Makefile
+
+3. Compile and link the driver. Type <tt>make</tt> on Linux and UNIX or
+   <tt>nmake</tt> on Windows. This should compile and link cleanly, creating
+   output shared library <tt>Ingres.so</tt>:
+
+     gcc -I. -I. -I/usr/lib/ruby/1.8/i686-linux -I. -DHAVE_IIAPI_H  -D_FILE_OFFSET_BITS=64  -fPIC -g -O2  -I/opt/Ingres/R3/ingres/files  -c Unicode.c
+     gcc -I. -I. -I/usr/lib/ruby/1.8/i686-linux -I. -DHAVE_IIAPI_H  -D_FILE_OFFSET_BITS=64  -fPIC -g -O2  -I/opt/Ingres/R3/ingres/files  -c Ingres.c
+     gcc -shared -o Ingres.so Unicode.o Ingres.o -L. -L/usr/lib -Wl,-R/usr/lib -L.  -rdynamic -Wl,-export-dynamic -L/opt/Ingres/R3/ingres/lib -lq.1 -lcompat.1 -lframe.1 -liiapi.1 -lrt    -liiapi  -lrt -ldl -lcrypt -lm   -lc
+
+
+   * On Windows, <tt>Ingres.so</tt> is a DLL, but is nevertheless suffixed with ".so"
+     rather than ".dll".
+   * On Windows, you can ignore warnings about the compiler and linker flags
+     being unknown options.
+   * On Windows with Ruby versions later than 1.8.5, the following error may
+     be seen on the link:
+
+        cannot open input file "msvcrt-ruby18.lib"
+
+     This can be resolved by removing the (lower case) "libpath =" line in
+     the makefile.
+
+=== To install the driver
+
+Type <tt>make install</tt>. (On Windows, type <tt>nmake install</tt>).
+
+Or, with the pre-built Windows binary, copy Ingres.so to Ruby's i386-msvcrt
+directory, such as: 
+
+  C:\ruby\lib\ruby\site_ruby\1.8\i386-msvcrt
+
+=== Ingres ActiveRecord Adapter
+
+At a minimum, Ruby's ActiveRecord must be installed. If running Rails, this
+will already exist as part of the Rails installation. For non-Rails users, ActiveRecord
+may come with Ruby or may be installed separately as a Ruby "gem" into the Ruby
+installation. See http://docs.rubygems.org/read/chapter/3 for information on
+installing the RubyGems package.
+
+There are several steps required to install the Ingres ActiveRecord adapter into the Ruby
+ActiveRecord installation.
+
+Note: If only using the Ingres Ruby driver interface (not ActiveRecord), installation of
+the adapter can be skipped and you can go directly to installation of the
+driver below.
+
+Typically, the base path of the ActiveRecord installation will be similar to the
+following and will be referred to hereafter in this documentation as ARBASE
+(digits in the path refer to the ActiveRecord version):
+
+* UNIX/Linux
+    /usr/lib/ruby/gems/1.8/gems/activerecord-2.4.3
+* Windows
+    C:\ruby\lib\ruby\gems\1.8\gems\activerecord-2.4.3
+
+To install the Ingres ActiveRecord adapter into the Ruby ActiveRecord installation
+
+1. Copy the adapter file, <tt>ingres_adapter.rb</tt>, to the ARBASE/lib/active-
+   record/connection_adapters directory.
+2. *NOTE*: Not required for Rails 2.1 or later. Add Ingres as a valid database
+   to ActiveRecord. Edit <tt>active_record.rb</tt> file in 
+   ARBASE/lib by adding "ingres" to the end of a line that looks like:
+
+     RAILS_CONNECTION_ADAPTERS = %w( mysql postgresql sqlite firebird sqlserver db2 oracle sybase openbase ingres )
+
+3. If you do not wish to run the Rails unit tests against Ingres you can skip this
+   step. Set up database connection information. Create a new directory called
+   native_ingres under the ARBASE/test/connections directory. Copy and edit
+   the supplied <tt>connection.rb</tt> file to define database name, user ID, password
+   information.
+4. For each Rails application accessing Ingres, edit the database.yml file in
+   the application's <tt>config</tt>folder to specify the Ingres adapter plus
+   database and user information. The following is a sample entry for a local
+   Ingres database connection named my_rails_app_development:
+
+     development:
+         adapter: ingres
+         database: my_rails_app_development
+         username: ingres
+         password: ingres
+         host: localhost
+
+   For remote connections, change database and host to Ingres remote
+   connection format in either "vnode::databasename" where vnode is a name
+   configured in the Ingres Network Utility or a dynamic vnode using the syntax:
+
+      @host,protocol,port[user,pwd]::databasename
+      
+   For more information see the Ingres Connectivity Guide at
+   http://docs.ingres.com.
+
+== Example Code
+
+=== IRB (Interactive Ruby) Using Ingres Ruby Driver Only (Without ActiveRecord Adapter)
+
+  >>>$ irb
+  irb(main):001:0> require 'Ingres'
+  => true
+  irb(main):002:0> i = Ingres.new
+  => #<Ingres:0xb7fba520>
+  irb(main):003:0> i.connect("activerecord_unittest")
+  => #<Ingres:0xb7fba520>
+  irb(main):006:0> sql="select * from developers"
+  => "select * from developers"
+  irb(main):007:0> result_set = i.execute(sql)
+  => [[5, "fixture_5", 100000, "NULL", "NULL"], [6, "fixture_6", 100000,
+  "NULL", "NULL"], [7,"fixture_7", 100000, "NULL", "NULL"], [11, "Jamis", 9000,
+  "NULL", "NULL"], [8, "fixture_8", 100000, "NULL", "NULL"], [9, "fixture_9",
+  100000, "NULL", "NULL"], [2, "Jamis", 150000, "NULL", "NULL"], [10,
+  "fixture_10", 100000, "NULL", "NULL"], [3, "fixture_3", 100000, "NULL",
+  "NULL"], [1, "David", 80000, "NULL", "NULL"], [4, "fixture_4", 100000,
+  "NULL", "NULL"]]
+
+
+== Ruby Program Using Ingres Ruby Driver Only (Without ActiveRecord Adapter)
+
+  require "Ingres"
+  ing = Ingres.new
+  # You must connect to a database.
+  # Be sure you've created the database using "createdb".
+  ing.connect(some_database)
+  # you can also use:
+  # ing.connect_with_credentials( some_database, user_name, password)
+  sql = "select * from some_table"
+  result_set = ing.execute(sql)
+  # or
+  # result_set = ing.exec(sql)
+  # the result set is an array of arrays.
+  # you get one array for each row
+  # {{a,b,c}, {d,e,f}, etc}
+  # metadata is stored in these routines
+  # how many rows were touched by the last query
+  # usually an update
+  puts ing.rows_affected
+  # what's the current database (from the connect call)
+  puts ing.current_database
+  # the names of each column in the result set
+  puts ing.column_list_of_names
+  # the size of the data in each column
+  # this could be the length of a varchar or an int
+  puts ing.data_sizes
+  # what type is in each column
+  puts ing.data_types
+  # all the tables in the current database
+  puts ing.tables
+  # properly terminate your database connection
+  ing.disconnect
+
+
+== Rails Cookbook Tutorial (Web Application) Using Ingres ActiveRecord Adapter
+
+A Cookbook Tutorial can be accessed from the Rails website 
+(http://rubyonrails.org/docs) under the Tutorials section. Selection Rolling with Ruby
+on Rails: Part I takes you to 
+http://www.onlamp.com/pub/a/onlamp/2006/12/14/revisiting-ruby-on-rails-revisited.html. 
+The demo referred to in the tutorial is installed as part of some of the pre-packaged Ruby on Rails versions, such as
+InstantRails on Windows or Rails LiveCD on Linux.
+
+To run this demo in InstantRails, which is preconfigured to run against another
+database, do the following:
+
+1. Install the Ingres Ruby ActiveRecord adapter and driver into InstantRails per the
+   instructions above (InstantRails comes with its own version of Ruby and
+   ActiveRecord).
+2. Create the database in Ingres with schemas.
+   1. Create the database:
+        createdb cookbook_development
+   2. Create and populate the tables:
+        sql cookbook_development < cookbook_ingres.sql
+3. Configure the application to use the Ingres ActiveRecord adapter.
+   Edit database.yml in 
+      ...\rails_apps\cookbook:
+   1. Change adapter from "mysql" to "ingres" in all (three) occurrences.
+   2. Update username and password as needed; for example, username:
+      ingres.
+   3. Edit database to be the full name of the database. Unlike MySql, the
+      _development, _test, _production suffixes are not automatically
+      added.
+4. Start up systems (if not already started):
+   1. Start up Ingres (ingstart)
+   2. Start up Rails. For Instant Rails:
+
+        cd C:\InstantRails
+        use_ruby
+        cd ..
+        InstantRails
+
+   3. Start up Mongrel (web server)
+      If Mongrel is already up and app or even database.yml was changed,
+      you must restart Mongrel:
+      Shutdown with Control-C in Mongrel startup command window.
+
+        cd C:\InstantRails\rails_apps\cookbook
+        mongrel_rails start
+
+5. Run application:
+   From web browser, set url=http://localhost:3000/category. You should get a
+   screen showing "Online Cookbook" at the top.
+
+
+== Frequent Flyer Demo 
+
+If you would like to get a copy of the Frequent Flyer demo, please email
+community-drivers@ingres.com.
+
+== Known Issues
+
+* Ingres driver current_database() returns the entire connection string for the
+  database, including "vnode::" and server type, if present.
+* Ingres decimals are handled as string values
+
+
+== More Information
+
+As this product is still in beta status, issues specific to the Ingres Ruby
+ActiveRecord adapter and driver should be posted on the Ingres forum 
+http://community.ingres.com/forum/ruby-driver-ruby-rails-adapter/. Users with an
+active support contract can raise an issue via their local support center.
+You can find more information on using the Ingres Ruby driver and ActiveRecord 
+bindings at http://community.ingres.com/wiki/Ruby.  For online
+technical assistance for other Ingres products or components, and a complete
+list of locations, primary service hours, and telephone numbers, contact
+technical support at http://ingres.com/support.
+
+== Generating the Ingres docs
+
+The documentation for the Ingres Ruby driver is generated using the RDoc tool
+with the _hanna_ template. Both of these can be installed using <tt>rubygems</tt>:
+
+  gem install rdoc --version 2.3.0
+  gem install hanna
+
+To generate the Ingres documentation use the following command:
+
+  hanna -U Ingres.c CHANGELOG README.rdoc
+
+---
+
+Revision $Id: README 198 2008-08-27 17:29:22Z grant $
+
+(c) 2009 Ingres Corporation. All rights reserved.

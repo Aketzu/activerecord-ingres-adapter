@@ -1,0 +1,674 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>: Ingres [Ingres Ruby Documentation]</title>
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <link href='../rdoc-style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='class' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>
+          <span class='type'>Class</span>
+          Ingres
+        </h1>
+        <ol class='paths'>
+          <li>
+            <a href="../files/Ingres_c.html">Ingres.c</a>
+          </li>
+        </ol>
+        <div class='parent'>
+          Parent:
+          <strong>Object</strong>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='description'>
+            <p>
+            The class to access the <a href="Ingres.html">Ingres</a> RDBMS via OpenAPI
+            </p>
+            <p>
+            For example, to execute a simple query
+            </p>
+            <pre>require 'Ingres'&#x000A;ing = Ingres.new()&#x000A;ing.connect(:database =&gt; 'demodb')&#x000A;result = ing.execute('SELECT * from user_profile')</pre>
+            <p>
+            See <a href="../files/README_rdoc.html">README.rdoc</a>, for information
+            about obtaining and installing the <a href="Ingres.html">Ingres</a> Ruby
+            Driver.
+            </p>
+          </div>
+          <div id='method-list'>
+            <h2>Methods</h2>
+            <h3>public class</h3>
+            <ol>
+              <li><a href="#M000036">new</a></li>
+            </ol>
+            <h3>public instance</h3>
+            <ol>
+              <li><a href="#M000044">column_list_of_names</a></li>
+              <li><a href="#M000047">commit</a></li>
+              <li><a href="#M000037">connect</a></li>
+              <li><a href="#M000051">connect_with_credentials</a></li>
+              <li><a href="#M000041">current_database</a></li>
+              <li><a href="#M000045">data_sizes</a></li>
+              <li><a href="#M000042">data_types</a></li>
+              <li><a href="#M000038">disconnect</a></li>
+              <li><a href="#M000053">exec</a></li>
+              <li><a href="#M000039">execute</a></li>
+              <li><a href="#M000052">pexecute</a></li>
+              <li><a href="#M000048">rollback</a></li>
+              <li><a href="#M000043">rows_affected</a></li>
+              <li><a href="#M000049">savepoint</a></li>
+              <li><a href="#M000050">set_debug_flag</a></li>
+              <li><a href="#M000046">set_environment</a></li>
+              <li><a href="#M000040">tables</a></li>
+            </ol>
+          </div>
+          <div id='section'>
+            <div id='constants-list'>
+              <h2>Constants</h2>
+              <div class='name-list'>
+                <table summary='Constants'>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>VERSION</td>
+                    <td>=</td>
+                    <td class='context-item-value'>rb_str_new2 (RUBY_INGRES_VERSION)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      Driver version
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>API_LEVEL</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(RUBY_INGRES_API)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      Driver OpenAPI level
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>REVISION</td>
+                    <td>=</td>
+                    <td class='context-item-value'>rb_str_new2 (&quot;$Rev: 2195 $&quot;)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      Source code revision level
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_DMY</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_DMY)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      DMY Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_FINLAND</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_FINNISH)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      FINLAND Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_GERMAN</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_GERMAN)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      GERMAN Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_ISO</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_ISO)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      ISO Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_ISO4</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_ISO4)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      ISO4 Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_MDY</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_MDY)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      MDY Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_MULTINATIONAL</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_MULTI)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      MULTINATIONAL Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_MULTINATIONAL4</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_MLT4)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      MULTINATIONAL4 Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_SWEDEN</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_FINNISH)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      SWEDEN Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_US</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_US)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      US Date format
+                    </td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>DATE_FORMAT_YMD</td>
+                    <td>=</td>
+                    <td class='context-item-value'>INT2FIX(IIAPI_CPV_DFRMT_YMD)</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'>
+                      
+                      YMD Date format
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            <div id='methods'>
+              <h2>Public class methods</h2>
+              <div class='method public-class' id='method-M000036'>
+                <a name='M000036'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.new() &rarr; Ingres<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Initialises a new instance of <a href="Ingres.html">Ingres</a>.
+                  </p>
+                  <p>
+                  Example usage:
+                  </p>
+                  <pre>conn = Ingres.new()</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000036-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000036-source'>VALUE&#x000A;ii_init (VALUE param_self) &#x000A;{&#x000A;  char function_name[] = &quot;ii_init&quot;;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  ii_globals.debug = FALSE;&#x000A;  ii_globals.debug_connection = FALSE;&#x000A;  ii_globals.debug_sql = FALSE;&#x000A;  ii_globals.debug_termination = FALSE;&#x000A;  ii_globals.debug_transactions = FALSE;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;%s: About to execute ii_api_init ()\n&quot;, function_name);&#x000A;  ii_api_init ();&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return param_self;&#x000A;}</pre>
+                </div>
+              </div>
+              <h2>Public instance methods</h2>
+              <div class='method public-instance' id='method-M000044'>
+                <a name='M000044'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.column_list_of_names() &rarr; Array<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Returns an Array of column names for the last SQL <em>SELECT</em> statement
+                  executed.
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn = Ingres.connect(:database =&gt; &quot;demodb&quot;)&#x000A;users = conn.execute(&quot;select * from user_profile&quot;)&#x000A;columns = conn.column_list_of_names()</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000044-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000044-source'>VALUE&#x000A;ii_column_names (VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_column_names&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  return ii_conn-&gt;r_column_names;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000047'>
+                <a name='M000047'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.commit()<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Commit the current open transaction against the associated database
+                  connection. Any active savepoints created by savepoint will be released.
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000047-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000047-source'>VALUE&#x000A;ii_commit (VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_commit&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  /* We cannot commit a transaction if there is not one is already in place */&#x000A;  if (ii_conn-&gt;tranHandle == NULL)&#x000A;  {&#x000A;    rb_raise (rb_eRuntimeError, &quot;Unable to commit a non-existent transaction&quot;);&#x000A;  }&#x000A;  else&#x000A;  {&#x000A;    ii_api_commit (ii_conn);&#x000A;  }&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return Qnil;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000037'>
+                <a name='M000037'></a>
+                <div class='synopsis'>
+                  <span class='name'>
+                    Ingres.connect(connection_hash) &rarr; Ingres<br />
+                    Ingres.connect(database[, username, password]) &rarr; Ingres<br />
+                  </span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Make a connection to an <a href="Ingres.html">Ingres</a> database.
+                  </p>
+                  <p>
+                  <em>connection_hash</em> keys:
+                  </p>
+                  <ul>
+                  <li><tt>database</tt> - database to connect to in either of the following forms
+                  
+                  <pre>[vnode::]database[/svrclass]&#x000A;@hostname,tcp_ip,listen_address[username,password]::database</pre>
+                  </li>
+                  <li><tt>username</tt> - username to use for connection.
+                  
+                  </li>
+                  <li><tt>password</tt> - password for the supplied username
+                  
+                  </li>
+                  <li><tt>date_format</tt> - the string format to be used for <a
+                  href="Ingres.html">Ingres</a> date values. See the DATE_FORMAT_* constants
+                  for valid values.
+                  
+                  </li>
+                  </ul>
+                  <p>
+                  Usage examples:
+                  </p>
+                  <ul>
+                  <li>Setting the date format to &#8220;YYYY-MM-DD HH:MM:SS&#8220;
+                  
+                  <pre>Ingres.connect(:database =&gt; &quot;demodb&quot;, :date_format =&gt; Ingres::DATE_FORMAT_SWEDEN)</pre>
+                  </li>
+                  <li>Passing a username / password
+                  
+                  <pre>Ingres.connect(:database =&gt; &quot;demodb&quot;, :username =&gt; &quot;ruby&quot;, password =&gt; &quot;s3cr3t&quot;)</pre>
+                  </li>
+                  <li>Passing a hash variable
+                  
+                  <pre>config[:database] = &quot;demodb&quot;&#x000A;config[:username] = &quot;ruby&quot;&#x000A;config[:password] = &quot;s3cr3t&quot;&#x000A;config[:date_format] = Ingres::DATE_FORMAT_ISO4&#x000A;Ingres.connect(config)</pre>
+                  </li>
+                  </ul>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000037-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000037-source'>VALUE&#x000A;ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_connect&quot;;&#x000A;  VALUE param_targetDB;&#x000A;  VALUE param_username = Qnil;&#x000A;  VALUE param_password = Qnil;&#x000A;  VALUE param_value = Qnil;&#x000A;  VALUE args,arg;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;  int db_length = 0;&#x000A;  int param_no = 0;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  rb_scan_args (param_argc, param_argv, &quot;0*&quot;, &amp;args);&#x000A;&#x000A;  if (RARRAY_LEN(args) == 1)&#x000A;  {&#x000A;    arg = rb_ary_entry(args,0);&#x000A;    if (TYPE (arg) == T_STRING)&#x000A;    {&#x000A;      /* Just have a database */&#x000A;      param_targetDB = arg;&#x000A;      param_username = rb_str_new2 (&quot;&quot;);&#x000A;      param_password = rb_str_new2 (&quot;&quot;);&#x000A;    }&#x000A;    else if (TYPE (arg) == T_HASH)&#x000A;    {&#x000A;      /* Ingres.connect({:dbname=&gt;xxxx, :username =&gt; &quot;xxxx&quot;, :password =&gt; &quot;xxxx&quot;}) */&#x000A;      param_targetDB = rb_hash_aref(arg, ID2SYM(rb_intern(&quot;database&quot;)));&#x000A;      param_username = rb_hash_aref(arg, ID2SYM(rb_intern(&quot;username&quot;)));&#x000A;      param_password = rb_hash_aref(arg, ID2SYM(rb_intern(&quot;password&quot;)));&#x000A;      &#x000A;      if (TYPE(param_targetDB) == T_NIL)&#x000A;      {&#x000A;        rb_raise(rb_eArgError, &quot;Unable to connect without specifying a database&quot;);&#x000A;      }&#x000A;      for ( param_no = 0; param_no &lt; INGRES_NO_ENV_PARAMS; param_no++)&#x000A;      {&#x000A;        param_value = rb_hash_aref(arg, ID2SYM(rb_intern(CONN_PARAMS[param_no].paramName)));&#x000A;        if (TYPE(param_value) != T_NIL)&#x000A;        {&#x000A;          ii_api_set_connect_param (ii_conn, CONN_PARAMS[param_no].paramID, param_value);&#x000A;        }&#x000A;      }&#x000A;    }&#x000A;  }&#x000A;  else if (RARRAY_LEN(args) == 3)&#x000A;  {&#x000A;    param_targetDB = rb_ary_entry(args,0);&#x000A;    param_username = rb_ary_entry(args,1);&#x000A;    param_password = rb_ary_entry(args,2);&#x000A;  }&#x000A;  else&#x000A;  {&#x000A;                rb_raise(rb_eArgError, &quot;Expected one of: database, database + username/password or hash&quot;);&#x000A;  }&#x000A;&#x000A;  /* If param_username and param_password are not supplied, convert them to an empty T_STRING */&#x000A;  if ((TYPE (param_username) == T_NIL) &amp;&amp; (TYPE (param_password) == T_NIL))&#x000A;  {&#x000A;    param_username = rb_str_new2 (&quot;&quot;);&#x000A;    param_password = rb_str_new2 (&quot;&quot;);&#x000A;  }&#x000A;  else if ((TYPE (param_username) == T_STRING) &amp;&amp; (TYPE (param_password) == T_NIL))&#x000A;  {&#x000A;    /* Password is required when a username is supplied */&#x000A;    /* This is a hacky way of aborting but will do until an IngresError Exception has been added */&#x000A;    rb_raise(rb_eArgError, &quot;A password is required when specifying a username&quot;);&#x000A;  }&#x000A;&#x000A;  ii_api_connect (ii_conn, RSTRING_PTR(param_targetDB), RSTRING_PTR(param_username), RSTRING_PTR(param_password));&#x000A;&#x000A;  if (RARRAY_LEN(args) == 1)&#x000A;  {&#x000A;    arg = rb_ary_entry(args,0);&#x000A;    if (TYPE (arg) == T_HASH)&#x000A;    {&#x000A;      for (param_no = 0; param_no &lt; INGRES_NO_ENV_PARAMS; param_no++)&#x000A;      {&#x000A;        param_value = rb_hash_aref(arg, ID2SYM(rb_intern(ENV_PARAMS[param_no].paramName)));&#x000A;        if (TYPE(param_value) != T_NIL)&#x000A;        {&#x000A;          ii_api_set_env_param (ENV_PARAMS[param_no].paramID, param_value);&#x000A;        }&#x000A;      }&#x000A;    }&#x000A;  }&#x000A;  db_length = strlen(StringValuePtr(param_targetDB));&#x000A;&#x000A;  ii_conn-&gt;currentDatabase = ALLOC_N (char, db_length + 1);&#x000A;  memcpy (ii_conn-&gt;currentDatabase, StringValuePtr(param_targetDB), db_length);&#x000A;  ii_conn-&gt;currentDatabase[db_length] = '\0';&#x000A;&#x000A;  if (ii_globals.debug || ii_globals.debug_connection)&#x000A;    printf (&quot;%s: Set ii_conn-&gt;currentDatabase to %s\n&quot;, function_name, ii_conn-&gt;currentDatabase);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;&#x000A;  return param_self;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000051'>
+                <a name='M000051'></a>
+                <div class='synopsis'>
+                  <span class='name'>connect_with_credentials</span>
+                  <span class='arguments'>(...)</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Alias for <a href="Ingres.html#M000037">connect</a>
+                  </p>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000041'>
+                <a name='M000041'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.current_database() &rarr; String<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Return the name of associated database, if connected.
+                  </p>
+                  <p>
+                  Example usage:
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn = Ingres.connect(:database =&gt; &quot;demodb&quot;)&#x000A;puts conn.current_database()</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000041-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000041-source'>VALUE&#x000A;ii_current_database (VALUE param_self)&#x000A;{&#x000A;  VALUE curr_db;&#x000A;  char function_name[] = &quot;ii_current_database&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  curr_db = rb_str_new2 (ii_conn-&gt;currentDatabase);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return curr_db;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000045'>
+                <a name='M000045'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.data_sizes() &rarr; Array<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Returns an Array of Fixnum values representing the width of each column
+                  from the last SQL SELECT statement executed.
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn = Ingres.connect(:database =&gt; &quot;demodb&quot;)&#x000A;users = conn.execute(&quot;select * from user_profile&quot;)&#x000A;sizes = conn.data_sizes()</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000045-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000045-source'>VALUE&#x000A;ii_data_sizes (VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_data_sizes&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;&#x000A;  return ii_conn-&gt;r_data_sizes;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000042'>
+                <a name='M000042'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.data_types() &rarr; Array<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Returns and Array of data types names for the last SQL SELECT statement
+                  executed.
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn = Ingres.connect(:database =&gt; &quot;demodb&quot;)&#x000A;users = conn.execute(&quot;select * from user_profile&quot;)&#x000A;types = conn.data_types()</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000042-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000042-source'>VALUE&#x000A;ii_return_data_types (VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_return_data_types&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  return ii_conn-&gt;r_data_types;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000038'>
+                <a name='M000038'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.disconnect ()<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Disconnect from associated database
+                  </p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000038-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000038-source'>static VALUE&#x000A;ii_disconnect (VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_disconnect&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;  if (ii_globals.debug || ii_globals.debug_termination)&#x000A;    printf (&quot;%s: Preparing to disconnect\n&quot;, function_name);&#x000A;&#x000A;  if (ii_conn-&gt;keep_me)&#x000A;    rb_ary_clear (ii_conn-&gt;keep_me);&#x000A;&#x000A;  /* If there is an active transaction it must be closed before disconnection */&#x000A;  if (ii_conn-&gt;tranHandle)&#x000A;  {&#x000A;    ii_api_rollback (ii_conn, NULL);&#x000A;  }&#x000A;  if (ii_conn-&gt;connHandle)&#x000A;  {&#x000A;    ii_api_disconnect(ii_conn);&#x000A;  }&#x000A;  else&#x000A;  {&#x000A;    if (ii_globals.debug || ii_globals.debug_termination)&#x000A;      printf (&quot;%s: Not connected\n&quot;, function_name);&#x000A;  }&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return Qnil;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000053'>
+                <a name='M000053'></a>
+                <div class='synopsis'>
+                  <span class='name'>exec</span>
+                  <span class='arguments'>(...)</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Alias for <a href="Ingres.html#M000039">execute</a>
+                  </p>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000039'>
+                <a name='M000039'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.execute(sql[ param_types, param_values]) &rarr; Array<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Execute the supplied <em>sql</em> statement returning the results as a
+                  2-dimensional Array. The first dimension represents each row and the second
+                  dimension represents each column within the row. <em>param_types</em> is a
+                  string of letters, with each letter representing the type of each parameter
+                  being passed.
+                  </p>
+                  <p>
+                  For SQL queries or database procedure calls that contain parameters, use
+                  the <a href="Ingres.html#M000039">Ingres.execute()</a> method in one of the
+                  following formats. For selects, inserts, deletes, and updates:
+                  </p>
+                  <pre>execute(sql [ [, param_type, param_value ] … ] )</pre>
+                  <p>
+                  For database procedure calls:
+                  </p>
+                  <pre>execute(&quot;{ &lt;call&gt; | &lt;execute procedure&gt; procedure_name [ (column_name = ? [&#x000A;[ , column_name = ? ] … ] ) ] }&quot; [ [ , column_name, param_type, param_value&#x000A;] … ] )</pre>
+                  <p>
+                  where parameters in the sql text are represented by question marks (?) and
+                  there is one set of param_type/param_value entries for each one. param_type
+                  must be one of the following single characters:
+                  </p>
+                  <p>
+                  <table> <tr><td><b>param_type</b><td><b>Description</b> <tr><td>b<td>byte
+                  <tr><td>B<td>long_byte <tr><td>c<td>char <tr><td>d<td>date
+                  <tr><td>D<td>decimal <tr><td>f<td>float <tr><td>i<td>integer
+                  <tr><td>n<td>nchar <tr><td>N<td>nvarchar <tr><td>t<td>text
+                  <tr><td>T<td>long_text <tr><td>v<td>varchar <tr><td>V<td>long_varchar
+                  </table>
+                  </p>
+                  <p>
+                  param_value should correspond to the expected type being sent.
+                  </p>
+                  <p>
+                  Example usage:
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn.connect(:database =&gt; &quot;demodb&quot;)&#x000A;results = conn.execute(&quot;select up_first, up_last, up_email from user_profile where up_id = ?&quot;, &quot;i&quot;, 1)</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000039-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000039-source'>VALUE&#x000A;ii_execute (int param_argc, VALUE * param_argv, VALUE param_self)&#x000A;{&#x000A;  VALUE ret_val = Qnil;&#x000A;  VALUE param_queryText;&#x000A;  VALUE params;&#x000A;  VALUE savePtName;&#x000A;  int i;&#x000A;  char function_name[] = &quot;ii_execute&quot;;&#x000A;  II_CONN *ii_conn;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  rb_scan_args (param_argc, param_argv, &quot;1*&quot;, &amp;param_queryText, &amp;params);&#x000A;&#x000A;  Check_Type(param_queryText, T_STRING);&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  /* determine what sort of query is being executed */&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Classifying query\n&quot;);&#x000A;  ii_conn-&gt;queryType = ii_query_type(RSTRING_PTR (param_queryText));&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Classified query\n&quot;);&#x000A;&#x000A;  switch (ii_conn-&gt;queryType)&#x000A;  {&#x000A;    case INGRES_SQL_COMMIT:&#x000A;      if (ii_conn-&gt;tranHandle != NULL)&#x000A;        ii_api_commit (ii_conn);&#x000A;      else if (ii_globals.debug || ii_globals.debug_transactions)&#x000A;        rb_warn (&quot;Attempting to ii_api_commit a non-existent transaction&quot;);&#x000A;      break;&#x000A;    case INGRES_SQL_ROLLBACK:&#x000A;      if (ii_conn-&gt;tranHandle != NULL)&#x000A;        ii_api_rollback (ii_conn, NULL);&#x000A;      else if (ii_globals.debug || ii_globals.debug_transactions)&#x000A;        rb_warn (&quot;Attempting to ii_api_rollback a non-existent transaction&quot;);&#x000A;      break;&#x000A;    case INGRES_SQL_ROLLBACK_TO:&#x000A;    case INGRES_SQL_ROLLBACK_WORK_TO:&#x000A;      /* ROLLBACK [WORK] TO SAVEPOINT */&#x000A;      if (ii_conn-&gt;tranHandle == NULL)&#x000A;      {&#x000A;        rb_raise (rb_eRuntimeError, &quot;Unable to rollback a non-existent transaction&quot;);&#x000A;      }&#x000A;      else&#x000A;      {&#x000A;        /* Extract Savepoint name */&#x000A;        savePtName = ii_savepoint_name(ii_conn, StringValuePtr(param_queryText));&#x000A;        ii_rollback (1, &amp;savePtName, param_self);&#x000A;      }&#x000A;      break;&#x000A;    case INGRES_START_TRANSACTION:&#x000A;      startTransaction (param_self);&#x000A;      break;&#x000A;    case INGRES_SQL_CONNECT:&#x000A;      rb_warn (&quot;Use connect() to connect to a database&quot;);&#x000A;      break;&#x000A;    case INGRES_SQL_DISCONNECT:&#x000A;      rb_warn (&quot;Use disconnect() to disconnect from a database&quot;);&#x000A;      break;&#x000A;    case INGRES_SQL_GETDBEVENT:&#x000A;      rb_warn (&quot;Ingres 'GET DBEVENT' is not supported at the current time&quot;);&#x000A;      break;&#x000A;    case INGRES_SQL_SAVEPOINT:&#x000A;      /* We cannot generate a save point if there is no transaction or if auto commit is in effect */&#x000A;      if (ii_conn-&gt;tranHandle == NULL)&#x000A;      {&#x000A;        rb_raise (rb_eRuntimeError, &quot;Unable to generate a save point if there is no active transaction&quot;);&#x000A;      }&#x000A;      else&#x000A;      {&#x000A;        /* Extract Savepoint name */&#x000A;        savePtName = ii_savepoint_name(ii_conn, StringValuePtr(param_queryText));&#x000A;        ii_api_savepoint (ii_conn, savePtName);&#x000A;      }&#x000A;      break;&#x000A;    case INGRES_SQL_AUTOCOMMIT:&#x000A;      rb_warn (&quot;Use autocommit() to set the auto-commit state&quot;);&#x000A;      break;&#x000A;    case INGRES_SQL_COPY:&#x000A;      rb_warn (&quot;Ingres 'COPY TABLE() INTO/FROM' is not supported at the current time&quot;);&#x000A;      break;&#x000A;    case INGRES_SQL_SELECT:&#x000A;    case INGRES_SQL_INSERT:&#x000A;    case INGRES_SQL_UPDATE:&#x000A;    case INGRES_SQL_DELETE:&#x000A;    case INGRES_SQL_CREATE:&#x000A;    case INGRES_SQL_ALTER:&#x000A;    case INGRES_SQL_EXECUTE_PROCEDURE:&#x000A;    case INGRES_SQL_CALL:&#x000A;    default:&#x000A;      if (ii_globals.debug || ii_globals.debug_transactions)&#x000A;        printf (&quot;Executing %s\n&quot;, StringValuePtr (param_queryText));&#x000A;      ret_val = ii_execute_query (ii_conn, StringValuePtr (param_queryText), param_argc - 1, params);&#x000A;      break;&#x000A;  }&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return ret_val;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000052'>
+                <a name='M000052'></a>
+                <div class='synopsis'>
+                  <span class='name'>pexecute</span>
+                  <span class='arguments'>(...)</span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Alias for <a href="Ingres.html#M000039">execute</a>
+                  </p>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000048'>
+                <a name='M000048'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.rollback([savepoint])<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Rollback the current transaction against the associated database connection
+                  to the named savepoint. If no savepoint is specified the transaction is
+                  rolled back to the last commit point and all savepoints created by
+                  savepoint are released.
+                  </p>
+                  <p>
+                  Example usage with savepoints:
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn.connect(:database =&gt; &quot;demodb&quot;)&#x000A;conn.execute(&quot;START TRANSACTION&quot;)&#x000A;conn.execute(&quot;INSERT INTO user_profile VALUES&#x000A;  (1,'Test', 'User 1', 'user1@example.com','VLL', NULL)&quot;)&#x000A;conn.savepoint(&quot;user1&quot;)&#x000A;conn.execute(&quot;INSERT INTO user_profile VALUES&#x000A;  (2,'Test', 'User 2', 'user2@example.com','MAD', NULL)&quot;)&#x000A;conn.execute(&quot;INSERT INTO user_profile VALUES&#x000A;  (3,'Test', 'User 3', 'user3@example.com','JFK', NULL)&quot;)&#x000A;conn.rollback(&quot;user1&quot;)</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000048-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000048-source'>VALUE&#x000A;ii_rollback (int param_argc, VALUE * param_argv, VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_rollback&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;  VALUE param_savepointName = (VALUE) FALSE;&#x000A;  II_SAVEPOINT_ENTRY *savePtEntry = NULL;&#x000A;  II_SAVEPOINT_ENTRY *nextSavePtEntry = NULL;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  rb_scan_args (param_argc, param_argv, &quot;01&quot;, &amp;param_savepointName);&#x000A;  if (param_argc)&#x000A;  {&#x000A;    Check_Type(param_savepointName, T_STRING);&#x000A;  }&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  /* We cannot rollback a transaction if there is not one is already in place */&#x000A;  if (ii_conn-&gt;tranHandle == NULL)&#x000A;  {&#x000A;    rb_raise (rb_eRuntimeError, &quot;Unable to rollback a non-existent transaction&quot;);&#x000A;  }&#x000A;  else&#x000A;  {&#x000A;    if (param_argc)&#x000A;    {&#x000A;      /* Find the the savepoint entry in the list of savepoints */&#x000A;      if (ii_conn-&gt;savePtList)&#x000A;      {&#x000A;        savePtEntry = ii_conn-&gt;savePtList;&#x000A;        while (savePtEntry)&#x000A;        {&#x000A;          /* Check to see if the entry's savePtName is the same length else we could&#x000A;           * have a false postive result */&#x000A;          if (strlen(savePtEntry-&gt;savePtName) == RSTRING_LEN(param_savepointName))&#x000A;          {&#x000A;            if (strncasecmp(savePtEntry-&gt;savePtName, RSTRING_PTR (param_savepointName), RSTRING_LEN(param_savepointName)) == 0)&#x000A;            {&#x000A;              /* Found it */&#x000A;              break;&#x000A;            }&#x000A;          }&#x000A;          /* Not found move on to the next one (if any) */&#x000A;          savePtEntry = savePtEntry-&gt;nextSavePtEntry;&#x000A;        }&#x000A;      }&#x000A;      else&#x000A;      {&#x000A;        rb_raise (rb_eRuntimeError, &quot;Unable to rollback to a non-existent savepoint&quot;);&#x000A;      }&#x000A;      if (savePtEntry == NULL)&#x000A;      {&#x000A;        rb_raise (rb_eRuntimeError, &quot;Savepoint %s does not exist&quot;, RSTRING_PTR (param_savepointName));&#x000A;      }&#x000A;    }&#x000A;    &#x000A;    ii_api_rollback (ii_conn, savePtEntry);&#x000A;&#x000A;  }&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return Qnil;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000043'>
+                <a name='M000043'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.rows_affected() &rarr; Fixnum<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Return the number of rows affected by the last SQL statement.
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn = Ingres.connect(:database =&gt; &quot;demodb&quot;)&#x000A;users = conn.execute(&quot;select * from user_profile&quot;)&#x000A;user_count = conn.rows_affected()</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000043-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000043-source'>VALUE&#x000A;ii_rows_affected (VALUE param_self)&#x000A;{&#x000A;  VALUE return_value;&#x000A;  char function_name[] = &quot;ii_rows_affected&quot;;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  return_value = INT2NUM (global_rows_affected);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return return_value;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000049'>
+                <a name='M000049'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.savepoint(savepoint)<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Create a savepoint using the supplied name. The savepoint can be used as a
+                  marker for performing partial rollbacks with rollback. When either commit
+                  or rollback (without specifying a savepoint name) is called, all savepoints
+                  are released.
+                  </p>
+                  <p>
+                  Example usage:
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn.connect(:database =&gt; &quot;demodb&quot;)&#x000A;conn.execute(&quot;START TRANSACTION&quot;)&#x000A;conn.execute(&quot;INSERT INTO user_profile VALUES&#x000A;  (1,'Test', 'User 1', 'user1@example.com','VLL', NULL)&quot;)&#x000A;conn.savepoint(&quot;user1&quot;)&#x000A;conn.execute(&quot;INSERT INTO user_profile VALUES&#x000A;  (2,'Test', 'User 2', 'user2@example.com','MAD', NULL)&quot;)&#x000A;conn.execute(&quot;INSERT INTO user_profile VALUES&#x000A;  (3,'Test', 'User 3', 'user3@example.com','JFK', NULL)&quot;)&#x000A;conn.rollback(&quot;user1&quot;)</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000049-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000049-source'>VALUE&#x000A;ii_savepoint (VALUE param_self, VALUE param_savepointName)&#x000A;{&#x000A;  char function_name[] = &quot;ii_savepoint&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  Check_Type (param_savepointName, T_STRING);&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  /* We cannot generate a save point if there is no transaction or if auto commit is in effect */&#x000A;  if (ii_conn-&gt;tranHandle == NULL)&#x000A;  {&#x000A;    rb_raise (rb_eRuntimeError, &quot;Unable to generate a save point if there is no active transaction&quot;);&#x000A;  }&#x000A;  else&#x000A;  {&#x000A;    ii_api_savepoint (ii_conn, param_savepointName);&#x000A;  }&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return Qnil;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000050'>
+                <a name='M000050'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.set_debug_flag(flag, flag_value) &rarr; nil<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  To turn trace debugging on or off
+                  </p>
+                  <p>
+                  Valid values:
+                  </p>
+                  <ul>
+                  <li><em>flag</em> can be one of <tt>GLOBAL_DEBUG</tt>,
+                  <tt>DEBUG_TRANSACTIONS</tt>, <tt>DEBUG_SQL</tt>, <tt>DEBUG_TERMINATION</tt>
+                  
+                  </li>
+                  <li><em>flag_value</em> is either <tt>TRUE</tt> or <tt>FALSE</tt>
+                  
+                  </li>
+                  </ul>
+                  <p>
+                  Example usage:
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn.set_debug_flag(&quot;GLOBAL_DEBUG&quot;,&quot;TRUE&quot;)</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000050-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000050-source'>VALUE&#x000A;ii_set_debug_flag (VALUE param_self, VALUE param_debug_flag, VALUE param_debug_flag_value)&#x000A;{&#x000A;  int new_debug_value = FALSE;&#x000A;  char function_name[] = &quot;ii_set_debug_flag&quot;;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  Check_Type (param_debug_flag, T_STRING);&#x000A;  Check_Type (param_debug_flag_value, T_STRING);&#x000A;&#x000A;  if (!strcmp (RSTRING_PTR (param_debug_flag_value), &quot;TRUE&quot;))&#x000A;    new_debug_value = TRUE;&#x000A;&#x000A;  if (!strcmp (RSTRING_PTR (param_debug_flag), &quot;GLOBAL_DEBUG&quot;))&#x000A;    ii_globals.debug = new_debug_value;&#x000A;  else if (!strcmp (RSTRING_PTR (param_debug_flag), &quot;DEBUG_TRANSACTIONS&quot;))&#x000A;    ii_globals.debug_transactions = new_debug_value;&#x000A;  else if (!strcmp (RSTRING_PTR (param_debug_flag), &quot;DEBUG_SQL&quot;))&#x000A;    ii_globals.debug_sql = new_debug_value;&#x000A;  else if (!strcmp (RSTRING_PTR (param_debug_flag), &quot;DEBUG_TERMINATION&quot;))&#x000A;    ii_globals.debug_termination = new_debug_value;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return Qnil;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000046'>
+                <a name='M000046'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.set_environment(environment_hash) &rarr; nil<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Method used to configure the environment settings for a Ruby application.
+                  </p>
+                  <p>
+                  Valid hash keys are:
+                  </p>
+                  <ul>
+                  <li><tt>:dateformat</tt>
+                  
+                  </li>
+                  </ul>
+                  <p>
+                  Example usage:
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn.connect(:database =&gt; &quot;demodb&quot;)&#x000A;conn.set_environment(:date_format =&gt; Ingres::DATE_FORMAT_FINLAND)</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000046-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000046-source'>VALUE&#x000A;ii_set_environment (int param_argc, VALUE *param_argv, VALUE param_self)&#x000A;{&#x000A;  char function_name[] = &quot;ii_set_environment&quot;;&#x000A;  VALUE param_value = Qnil;&#x000A;  VALUE args,arg;&#x000A;  int param_no = 0;&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  rb_scan_args (param_argc, param_argv, &quot;0*&quot;, &amp;args);&#x000A;&#x000A;  if (RARRAY_LEN(args) == 1)&#x000A;  {&#x000A;    arg = rb_ary_entry(args,0);&#x000A;    if (TYPE (arg) == T_HASH)&#x000A;    {&#x000A;      for (param_no = 0; param_no &lt; INGRES_NO_ENV_PARAMS; param_no++)&#x000A;      {&#x000A;        param_value = rb_hash_aref(arg, ID2SYM(rb_intern(ENV_PARAMS[param_no].paramName)));&#x000A;        if (TYPE(param_value) != T_NIL)&#x000A;        {&#x000A;          ii_api_set_env_param (ENV_PARAMS[param_no].paramID, param_value);&#x000A;        }&#x000A;      }&#x000A;    }&#x000A;    else&#x000A;    {&#x000A;      rb_raise(rb_eArgError, &quot;Expected a hash of environment parameters&quot;);&#x000A;    }&#x000A;  }&#x000A;  else&#x000A;  {&#x000A;    rb_raise(rb_eArgError, &quot;Expected a hash of environment parameters&quot;);&#x000A;  }&#x000A;&#x000A;  return param_self;&#x000A;}</pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-M000040'>
+                <a name='M000040'></a>
+                <div class='synopsis'>
+                  <span class='name'>Ingres.tables() &rarr; Array<br /></span>
+                </div>
+                <div class='description'>
+                  <p>
+                  Return a list of all the tables in the database associated with this
+                  instance.
+                  </p>
+                  <p>
+                  Example usage:
+                  </p>
+                  <pre>conn = Ingres.new()&#x000A;conn = Ingres.connect(:database =&gt; &quot;demodb&quot;)&#x000A;con.tables</pre>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('M000040-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='M000040-source'>static VALUE&#x000A;ii_tables (VALUE param_self)&#x000A;{&#x000A;  VALUE table_list;&#x000A;  VALUE sql_string;&#x000A;  VALUE *params;&#x000A;  char function_name[] = &quot;ii_tables&quot;;&#x000A;  II_CONN *ii_conn = NULL;&#x000A;&#x000A;  Data_Get_Struct(param_self, II_CONN, ii_conn);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Entering %s.\n&quot;, function_name);&#x000A;&#x000A;  sql_string = rb_str_new2 (&quot;SELECT table_name FROM iitables WHERE table_type = 'T' AND table_name not like 'ii%'&quot;);&#x000A;  table_list = ii_execute (1, &amp;sql_string, param_self);&#x000A;&#x000A;  if (ii_globals.debug)&#x000A;    printf (&quot;Exiting %s.\n&quot;, function_name);&#x000A;  return table_list;&#x000A;}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>

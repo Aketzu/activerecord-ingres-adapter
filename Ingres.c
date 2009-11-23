@@ -190,9 +190,21 @@ ii_api_init ()
     printf ("Exiting %s.\n", function_name);
 }
 
-
+/* 
+ * Document-method: new
+ *
+ * Initialises a new instance of Ingres.
+ *
+ * call-seq:
+ *    Ingres.new() -> Ingres
+ *
+ * Example usage:
+ *
+ *    conn = Ingres.new()
+ *
+ */
 VALUE
-ii_init (VALUE param_self)
+ii_init (VALUE param_self) 
 {
   char function_name[] = "ii_init";
   if (ii_globals.debug)
@@ -231,42 +243,6 @@ init_rb_array (VALUE * param_rb_array)
   if (ii_globals.debug)
     printf ("Exiting %s.\n", function_name);
 }
-
-
-/* Just convert the Ingres datatypes to a string value.
- * I've included all the Ingres datatypes here for reference.
- * Taken from from iiapi.h
- *
-# define IIAPI_HNDL_TYPE    ((IIAPI_DT_ID) -1)
-# define IIAPI_CHR_TYPE     ((IIAPI_DT_ID) 32)
-# define IIAPI_CHA_TYPE     ((IIAPI_DT_ID) 20)
-# define IIAPI_VCH_TYPE     ((IIAPI_DT_ID) 21)
-# define IIAPI_LVCH_TYPE    ((IIAPI_DT_ID) 22)
-# define IIAPI_BYTE_TYPE    ((IIAPI_DT_ID) 23)
-# define IIAPI_VBYTE_TYPE   ((IIAPI_DT_ID) 24)
-# define IIAPI_LBYTE_TYPE   ((IIAPI_DT_ID) 25)
-# define IIAPI_NCHA_TYPE    ((IIAPI_DT_ID) 26)
-# define IIAPI_NVCH_TYPE    ((IIAPI_DT_ID) 27)
-# define IIAPI_LNVCH_TYPE   ((IIAPI_DT_ID) 28)
-# define IIAPI_TXT_TYPE     ((IIAPI_DT_ID) 37)
-# define IIAPI_LTXT_TYPE    ((IIAPI_DT_ID) 41)
-# define IIAPI_INT_TYPE     ((IIAPI_DT_ID) 30)
-# define IIAPI_FLT_TYPE     ((IIAPI_DT_ID) 31)
-# define IIAPI_MNY_TYPE     ((IIAPI_DT_ID)  5)
-# define IIAPI_DEC_TYPE     ((IIAPI_DT_ID) 10)
-# define IIAPI_DTE_TYPE     ((IIAPI_DT_ID)  3)  ** Ingres Date **
-# define IIAPI_DATE_TYPE    ((IIAPI_DT_ID)  4)  ** ANSI Date **
-# define IIAPI_TIME_TYPE    ((IIAPI_DT_ID)  8)
-# define IIAPI_TMWO_TYPE    ((IIAPI_DT_ID)  6)
-# define IIAPI_TMTZ_TYPE    ((IIAPI_DT_ID)  7)
-# define IIAPI_TS_TYPE      ((IIAPI_DT_ID) 19)
-# define IIAPI_TSWO_TYPE    ((IIAPI_DT_ID)  9)
-# define IIAPI_TSTZ_TYPE    ((IIAPI_DT_ID) 18)
-# define IIAPI_INTYM_TYPE   ((IIAPI_DT_ID) 33)
-# define IIAPI_INTDS_TYPE   ((IIAPI_DT_ID) 34)
-# define IIAPI_LOGKEY_TYPE  ((IIAPI_DT_ID) 11)
-# define IIAPI_TABKEY_TYPE  ((IIAPI_DT_ID) 12)
-*/
 
 char *
 getIngresDataTypeAsString (IIAPI_DT_ID param_dt_id)
@@ -585,7 +561,25 @@ ii_api_connect (II_CONN *ii_conn, char *param_targetDB, char *param_username, ch
     printf ("Exiting %s.\n", function_name);
 }
 
-/* connects to the database */
+/* 
+ * Document-method: set_environment
+ *
+ * call-seq:
+ *    Ingres.set_environment(environment_hash) -> nil
+ *
+ * Method used to configure the environment settings for a Ruby application.
+ *
+ * Valid hash keys are:
+ *
+ * * <tt>:dateformat</tt>
+ *
+ * Example usage:
+ *
+ *  conn = Ingres.new()
+ *  conn.connect(:database => "demodb")
+ *  conn.set_environment(:date_format => Ingres::DATE_FORMAT_FINLAND)
+ *
+ */
 VALUE
 ii_set_environment (int param_argc, VALUE *param_argv, VALUE param_self)
 {
@@ -625,6 +619,38 @@ ii_set_environment (int param_argc, VALUE *param_argv, VALUE param_self)
 
   return param_self;
 }
+
+/*
+ * Document-method: connect
+ *
+ * call-seq: 
+ *    Ingres.connect(connection_hash) -> Ingres
+ *    Ingres.connect(database[, username, password]) -> Ingres
+ *
+ * Make a connection to an Ingres database.
+ *
+ * _connection_hash_ keys:
+ * * +database+ - database to connect to in either of the following forms
+ *    [vnode::]database[/svrclass]
+ *    @hostname,tcp_ip,listen_address[username,password]::database
+ * * +username+ - username to use for connection. 
+ * * +password+ - password for the supplied username
+ * * +date_format+ - the string format to be used for Ingres date values. See the
+ *   DATE_FORMAT_* constants for valid values.
+ *
+ * Usage examples:
+ * * Setting the date format to "YYYY-MM-DD HH:MM:SS"
+ *    Ingres.connect(:database => "demodb", :date_format => Ingres::DATE_FORMAT_SWEDEN)
+ * * Passing a username / password
+ *    Ingres.connect(:database => "demodb", :username => "ruby", password => "s3cr3t")
+ * * Passing a hash variable
+ *    config[:database] = "demodb"
+ *    config[:username] = "ruby"
+ *    config[:password] = "s3cr3t"
+ *    config[:date_format] = Ingres::DATE_FORMAT_ISO4
+ *    Ingres.connect(config)
+ *
+ */
 
 VALUE
 ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
@@ -733,6 +759,15 @@ ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
   return param_self;
 }
 
+/*
+ * Document-method: disconnect
+ *
+ * Disconnect from associated database
+ *
+ * call-seq: 
+ *    Ingres.disconnect ()
+ *
+ */
 static VALUE
 ii_disconnect (VALUE param_self)
 {
@@ -813,6 +848,17 @@ void ii_api_disconnect( II_CONN *ii_conn)
     printf ("Exiting %s.\n", function_name);
 }
 
+/*
+ * Document-method: commit
+ *
+ * call-seq:
+ *    Ingres.commit()
+ *
+ * Commit the current open transaction against the associated database
+ * connection. Any active savepoints created by savepoint will be
+ * released.
+ *
+ */
 VALUE
 ii_commit (VALUE param_self)
 {
@@ -838,6 +884,32 @@ ii_commit (VALUE param_self)
   return Qnil;
 }
 
+/*
+ * Document-method: rollback
+ *
+ * call-seq:
+ *    Ingres.rollback([savepoint])
+ *
+ * Rollback the current transaction against the associated database
+ * connection to the named savepoint. If no savepoint is specified the
+ * transaction is rolled back to the last commit point and all savepoints 
+ * created by savepoint are released.
+ *
+ * Example usage with savepoints:
+ *
+ *  conn = Ingres.new()
+ *  conn.connect(:database => "demodb")
+ *  conn.execute("START TRANSACTION")
+ *  conn.execute("INSERT INTO user_profile VALUES
+ *    (1,'Test', 'User 1', 'user1@example.com','VLL', NULL)")
+ *  conn.savepoint("user1")
+ *  conn.execute("INSERT INTO user_profile VALUES
+ *    (2,'Test', 'User 2', 'user2@example.com','MAD', NULL)")
+ *  conn.execute("INSERT INTO user_profile VALUES
+ *    (3,'Test', 'User 3', 'user3@example.com','JFK', NULL)")
+ *  conn.rollback("user1")
+ *
+ */
 VALUE
 ii_rollback (int param_argc, VALUE * param_argv, VALUE param_self)
 {
@@ -935,6 +1007,34 @@ ii_free_savePtEntries (II_SAVEPOINT_ENTRY *savePtEntry)
   if (ii_globals.debug)
     printf ("Exiting %s.\n", function_name);
 }
+
+/*
+ * Document-method: savepoint
+ *
+ * call-seq:
+ *    Ingres.savepoint(savepoint)
+ *
+ * Create a savepoint using the supplied name. The savepoint can be used
+ * as a marker for performing partial rollbacks with rollback. When
+ * either commit or rollback (without specifying a savepoint name)
+ * is called, all savepoints are released.
+ *
+ * Example usage:
+ *
+ *  conn = Ingres.new()
+ *  conn.connect(:database => "demodb")
+ *  conn.execute("START TRANSACTION")
+ *  conn.execute("INSERT INTO user_profile VALUES
+ *    (1,'Test', 'User 1', 'user1@example.com','VLL', NULL)")
+ *  conn.savepoint("user1")
+ *  conn.execute("INSERT INTO user_profile VALUES
+ *    (2,'Test', 'User 2', 'user2@example.com','MAD', NULL)")
+ *  conn.execute("INSERT INTO user_profile VALUES
+ *    (3,'Test', 'User 3', 'user3@example.com','JFK', NULL)")
+ *  conn.rollback("user1")
+ *
+ *
+ */
 
 VALUE
 ii_savepoint (VALUE param_self, VALUE param_savepointName)
@@ -3051,25 +3151,59 @@ ii_execute_query (II_CONN *ii_conn, char *param_sqlText, int param_argc, VALUE p
 
 
 /*
-** Name: ii_execute
-**
-** Description:
-**  Execute an SQL statement and the result set avaiable
-**
-** Input:
-**  queryText  SQL query text
-**
-** Output:
-**  Shared variables with Ruby are:
-**    data_types - the text name of each column's data type (as translated by this code)
-**    resultset - this is both the return value and shared with Ruby
-**
-** Return value:
-**  resultset, a Ruby datastructure.
-**   it contains an Array(a1) of Arrays(a2).
-**  a1 has one entry per row in the result set
-**  a2 has one entry per column in the result set
-*/
+ * Document-method: execute
+ *
+ * call-seq:
+ *    Ingres.execute(sql[ param_types, param_values]) -> Array
+ *
+ * Execute the supplied _sql_ statement returning the results as a
+ * 2-dimensional Array. The first dimension represents each row and the 
+ * second dimension represents each column within the row. _param_types_ is
+ * a string of letters, with each letter representing the type of each
+ * parameter being passed.
+ *
+ * For SQL queries or database procedure calls that contain parameters, use the
+ * Ingres.execute() method in one of the following formats.
+ * For selects, inserts, deletes, and updates:
+ * 
+ *   execute(sql [ [, param_type, param_value ] … ] )
+ * 
+ * For database procedure calls:
+ * 
+ *   execute("{ <call> | <execute procedure> procedure_name [ (column_name = ? [
+ *   [ , column_name = ? ] … ] ) ] }" [ [ , column_name, param_type, param_value
+ *   ] … ] )
+ * 
+ * where parameters in the sql text are represented by question marks (?) and
+ * there is one set of param_type/param_value entries for each one.
+ * param_type must be one of the following single characters:
+ * 
+ * <table>
+ * <tr><td>*param_type*<td>*Description*
+ * <tr><td>b<td>byte
+ * <tr><td>B<td>long_byte
+ * <tr><td>c<td>char
+ * <tr><td>d<td>date
+ * <tr><td>D<td>decimal
+ * <tr><td>f<td>float
+ * <tr><td>i<td>integer
+ * <tr><td>n<td>nchar
+ * <tr><td>N<td>nvarchar
+ * <tr><td>t<td>text
+ * <tr><td>T<td>long_text
+ * <tr><td>v<td>varchar
+ * <tr><td>V<td>long_varchar
+ * </table>
+ * 
+ * param_value should correspond to the expected type being sent.
+ * 
+ * Example usage:
+ *
+ *   conn = Ingres.new()
+ *   conn.connect(:database => "demodb")
+ *   results = conn.execute("select up_first, up_last, up_email from user_profile where up_id = ?", "i", 1)
+ *
+ */
 VALUE
 ii_execute (int param_argc, VALUE * param_argv, VALUE param_self)
 {
@@ -3176,7 +3310,21 @@ ii_execute (int param_argc, VALUE * param_argv, VALUE param_self)
   return ret_val;
 }
 
-/* return a list of all the tables in this database */
+/* 
+ * Document-method: tables
+ *
+ * call-seq:
+ *    Ingres.tables() -> Array
+ *
+ * Return a list of all the tables in the database associated with this instance.
+ *
+ * Example usage:
+ *
+ *   conn = Ingres.new()
+ *   conn = Ingres.connect(:database => "demodb")
+ *   con.tables
+ *
+ */
 static VALUE
 ii_tables (VALUE param_self)
 {
@@ -3199,8 +3347,21 @@ ii_tables (VALUE param_self)
   return table_list;
 }
 
-/* return the current database (if one is open) */
-
+/* 
+ * Document-method: current_database
+ *
+ * call-seq:
+ *    Ingres.current_database() -> String
+ *
+ * Return the name of associated database, if connected.
+ *
+ * Example usage:
+ *
+ *   conn = Ingres.new()
+ *   conn = Ingres.connect(:database => "demodb")
+ *   puts conn.current_database()
+ *
+ */
 VALUE
 ii_current_database (VALUE param_self)
 {
@@ -3220,9 +3381,8 @@ ii_current_database (VALUE param_self)
   return curr_db;
 }
 
-
 VALUE
-ii_crash_it (VALUE param_self)
+ii_crash_it (VALUE param_self) //:nodoc
 {
   VALUE a_string;
   VALUE yet_another_string;
@@ -3252,8 +3412,20 @@ ii_crash_it (VALUE param_self)
   return yet_another_string;
 }
 
-
-/* how many rows were affected by the last sql statement? */
+/* 
+ * Document-method: rows_affected
+ *
+ * call-seq:
+ *    Ingres.rows_affected() -> Fixnum
+ *
+ * Return the number of rows affected by the last SQL statement.
+ *
+ *   conn = Ingres.new()
+ *   conn = Ingres.connect(:database => "demodb")
+ *   users = conn.execute("select * from user_profile")
+ *   user_count = conn.rows_affected()
+ *
+ */
 VALUE
 ii_rows_affected (VALUE param_self)
 {
@@ -3269,7 +3441,20 @@ ii_rows_affected (VALUE param_self)
   return return_value;
 }
 
-
+/* 
+ * Document-method: data_types
+ *
+ * call-seq:
+ *    Ingres.data_types() -> Array
+ *
+ * Returns and Array of data types names for the last SQL SELECT statement executed.
+ *
+ *   conn = Ingres.new()
+ *   conn = Ingres.connect(:database => "demodb")
+ *   users = conn.execute("select * from user_profile")
+ *   types = conn.data_types()
+ *
+ */
 VALUE
 ii_return_data_types (VALUE param_self)
 {
@@ -3285,6 +3470,20 @@ ii_return_data_types (VALUE param_self)
 }
 
 
+/* 
+ * Document-method: column_list_of_names
+ *
+ * call-seq:
+ *    Ingres.column_list_of_names() -> Array
+ *
+ * Returns an Array of column names for the last SQL _SELECT_ statement executed.
+ *
+ *   conn = Ingres.new()
+ *   conn = Ingres.connect(:database => "demodb")
+ *   users = conn.execute("select * from user_profile")
+ *   columns = conn.column_list_of_names()
+ *
+ */
 VALUE
 ii_column_names (VALUE param_self)
 {
@@ -3300,6 +3499,21 @@ ii_column_names (VALUE param_self)
 }
 
 
+/* 
+ * Document-method: data_sizes
+ *
+ * call-seq:
+ *    Ingres.data_sizes() -> Array
+ *
+ * Returns an Array of Fixnum values representing the width of each column from the last
+ * SQL SELECT statement executed.
+ *
+ *   conn = Ingres.new()
+ *   conn = Ingres.connect(:database => "demodb")
+ *   users = conn.execute("select * from user_profile")
+ *   sizes = conn.data_sizes()
+ *
+ */
 VALUE
 ii_data_sizes (VALUE param_self)
 {
@@ -3316,6 +3530,24 @@ ii_data_sizes (VALUE param_self)
 }
 
 
+/* 
+ * Document-method: set_debug_flag
+ *
+ * call-seq:
+ *    Ingres.set_debug_flag(flag, flag_value) -> nil
+ *
+ * To turn trace debugging on or off
+ *
+ * Valid values:
+ * * _flag_ can be one of  <tt>GLOBAL_DEBUG</tt>, <tt>DEBUG_TRANSACTIONS</tt>, <tt>DEBUG_SQL</tt>, <tt>DEBUG_TERMINATION</tt>
+ * * _flag_value_ is either <tt>TRUE</tt> or <tt>FALSE</tt>
+ *
+ * Example usage:
+ *
+ *    conn = Ingres.new()
+ *    conn.set_debug_flag("GLOBAL_DEBUG","TRUE")
+ *
+ */
 VALUE
 ii_set_debug_flag (VALUE param_self, VALUE param_debug_flag, VALUE param_debug_flag_value)
 {
@@ -3388,7 +3620,21 @@ size_t STtrmwhite (register char *string)
   return nwl;
 }
 
-/* this routine is in for the Ruby integration */
+/********************************************************************
+ * 
+ * Document-class: Ingres
+ *
+ * The class to access the Ingres RDBMS via OpenAPI
+ *
+ * For example, to execute a simple query
+ *    require 'Ingres'
+ *    ing = Ingres.new()
+ *    ing.connect(:database => 'demodb')
+ *    result = ing.execute('SELECT * from user_profile')
+ * 
+ * See README.rdoc, for information about obtaining and installing the 
+ * Ingres Ruby Driver.
+ */
 void
 Init_Ingres ()
 {
@@ -3404,8 +3650,11 @@ Init_Ingres ()
 
   /* Constants for the driver */
 
+  /* Driver version */
   rb_define_const(cIngres, "VERSION", rb_str_new2 (RUBY_INGRES_VERSION));
+  /* Driver OpenAPI level */
   rb_define_const(cIngres, "API_LEVEL", INT2FIX(RUBY_INGRES_API));
+  /* Source code revision level */
   rb_define_const(cIngres, "REVISION", rb_str_new2 ("$Rev$"));
 
   rb_define_method (cIngres, "initialize", ii_init, 0);
@@ -3427,25 +3676,35 @@ Init_Ingres ()
 
   /* Aliases of methods */
   rb_define_alias (cIngres, "connect_with_credentials", "connect");
-  rb_define_alias (cIngres, "pexecute", "execute");
+  rb_define_alias (cIngres, "pexecute", "execute"); // Deprecated
   rb_define_alias (cIngres, "exec", "execute");
 
   rb_define_method (cIngres, "crash_it", ii_crash_it, 0);
   rb_define_method (cIngres, "set_debug_flag", ii_set_debug_flag, 2);
 
-  /* Constants */
+  /* :date_format Constants */
 
-  /* Date formats for Ingres.connect() / Ingres.set_environment() */
-  rb_define_const(cIngres,"DATE_FORMAT_DMY", INT2FIX(IIAPI_CPV_DFRMT_DMY));
+  /* DMY Date format */
+  rb_define_const(cIngres,"DATE_FORMAT_DMY", INT2FIX(IIAPI_CPV_DFRMT_DMY)); 
+  /* FINLAND Date format */
   rb_define_const(cIngres,"DATE_FORMAT_FINLAND", INT2FIX(IIAPI_CPV_DFRMT_FINNISH));
+  /* GERMAN Date format */
   rb_define_const(cIngres,"DATE_FORMAT_GERMAN", INT2FIX(IIAPI_CPV_DFRMT_GERMAN));
+  /* ISO Date format */
   rb_define_const(cIngres,"DATE_FORMAT_ISO", INT2FIX(IIAPI_CPV_DFRMT_ISO));
+  /* ISO4 Date format */
   rb_define_const(cIngres,"DATE_FORMAT_ISO4", INT2FIX(IIAPI_CPV_DFRMT_ISO4));
+  /* MDY Date format */
   rb_define_const(cIngres,"DATE_FORMAT_MDY", INT2FIX(IIAPI_CPV_DFRMT_MDY));
+  /* MULTINATIONAL Date format */
   rb_define_const(cIngres,"DATE_FORMAT_MULTINATIONAL", INT2FIX(IIAPI_CPV_DFRMT_MULTI));
+  /* MULTINATIONAL4 Date format */
   rb_define_const(cIngres,"DATE_FORMAT_MULTINATIONAL4", INT2FIX(IIAPI_CPV_DFRMT_MLT4));
+  /* SWEDEN Date format */
   rb_define_const(cIngres,"DATE_FORMAT_SWEDEN", INT2FIX(IIAPI_CPV_DFRMT_FINNISH));
+  /* US Date format */
   rb_define_const(cIngres,"DATE_FORMAT_US", INT2FIX(IIAPI_CPV_DFRMT_US));
+  /* YMD Date format */
   rb_define_const(cIngres,"DATE_FORMAT_YMD", INT2FIX(IIAPI_CPV_DFRMT_YMD));
 
 
@@ -3453,19 +3712,6 @@ Init_Ingres ()
     printf ("Exiting %s.\n", function_name);
 }
 
-/********************************************************************
- * 
- * Document-class: Ingres
- *
- * The class to access the Ingres RDBMS via OpenAPI
- *
- * For example, to send query to the database 
- *    require 'Ingres'
- *    ing = Ingres.new()
- *    ing.connect(:database => 'demodb')
- *    result = ing.execute('SELECT * from user_profile')
- *
- */
 
 /* Allocate the II_CONN structure used to store connection state et. al. */
 static VALUE rb_ingres_alloc(VALUE klass)
