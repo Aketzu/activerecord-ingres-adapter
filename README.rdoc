@@ -28,6 +28,8 @@ interface does not follow any standard API and may change in the future.
 This major release that addresses the following changes:
 
 ===== Ruby Driver
+
+- Update the documentation using RDoc
 - Add Ingres.set_environment()
 - Add the ability to set the date format for ingresdate values at connection
   time
@@ -61,7 +63,10 @@ This major release that addresses the following changes:
 - Change status to Beta
 
 ===== ActiveRecord Adapter
+
 - Update ingres_adapter.rb for ActiveRecord 2.3.x
+- Default to "id" for the :primary_key column in ActiveRecord if no 
+  PRIMARY KEY constraint is defined
 
 == Operating System Support
 
@@ -97,9 +102,11 @@ required:
 
 === Syntax for the Ingres Ruby Driver
 
-Note: We do not recommend that production applications use this API since it is
-intended for use with the Ingres ActiveRecord adapter. The API may change in the 
-future. It is, however, useful for testing Ingres connectivity and functionality.
+The Ingres Ruby driver is primarily designed for use with the Ingres ActiveRecord 
+adapter.  While it is possible to use the driver on its own, it should be noted 
+that the API may change in the future. It is, however, useful for testing Ingres 
+connectivity and functionality.
+
 A Ruby program must have a <tt>require 'Ingres'</tt> statement to load in driver file.
 
 === Driver Methods
@@ -446,12 +453,11 @@ community-drivers@ingres.com.
 
 == More Information
 
-Because this product is still in beta status, issues specific to the Ingres Ruby
-ActiveRecord adapter and driver should be posted on the Ingres forum 
-http://community.ingres.com/forum/ruby-driver-ruby-rails-adapter/. Users with an
-active support contract can raise an issue through their local support center.
-You can find more information on using the Ingres Ruby driver and ActiveRecord 
-bindings at http://community.ingres.com/wiki/Ruby.  For online
+Issues specific to the Ingres Ruby ActiveRecord adapter and driver can be posted 
+on the Ingres forum http://community.ingres.com/forum/ruby-driver-ruby-rails-adapter/. 
+Users with an active support contract can raise an issue through their local support 
+center or Service Desk.  You can find more information on using the Ingres Ruby 
+driver and ActiveRecord bindings at http://community.ingres.com/wiki/Ruby.  For online
 technical assistance for other Ingres products or components, and a complete
 list of locations, primary service hours, and telephone numbers, contact
 technical support at http://ingres.com/support.
