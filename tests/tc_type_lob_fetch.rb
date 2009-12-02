@@ -2,7 +2,7 @@ require 'Ingres'
 require 'test/unit'
 require 'tests/config.rb'
 
-class TestIngresConnection < Test::Unit::TestCase
+class TestIngresTypeLOB < Test::Unit::TestCase
   def setup
     @@ing = Ingres.new()
     assert_kind_of(Ingres, @@ing.connect(@@database), "conn is not an Ingres object")

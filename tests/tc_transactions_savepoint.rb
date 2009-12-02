@@ -54,11 +54,11 @@ class TestIngresTransactionSavePoints < Test::Unit::TestCase
         @@ing.savepoint "savepoint_#{element[0]}"
     }
     @@ing.rollback "savepoint_8"
-    assert_equal 8, @@ing.execute("select max(id) from savepoint_tests")[0]
+    assert_equal 8, @@ing.execute("select max(id) from savepoint_tests").flatten[0]
     @@ing.rollback "savepoint_5"
-    assert_equal 5, @@ing.execute("select max(id) from savepoint_tests")[0]
+    assert_equal 5, @@ing.execute("select max(id) from savepoint_tests").flatten[0]
     @@ing.rollback "savepoint_3"
-    assert_equal 3, @@ing.execute("select max(id) from savepoint_tests")[0]
+    assert_equal 3, @@ing.execute("select max(id) from savepoint_tests").flatten[0]
     @@ing.rollback
   end
 
@@ -73,7 +73,7 @@ class TestIngresTransactionSavePoints < Test::Unit::TestCase
       if @@rollback_points.has_key?(data_set[0])
         @savepoint_no = @@rollback_points.values_at(data_set[0])
         @@ing.rollback "savepoint_#{@savepoint_no}"
-        assert_equal @savepoint_no, @@ing.execute("select max(id) from savepoint_tests")
+        assert_equal @savepoint_no, @@ing.execute("select max(id) from savepoint_tests").flatten
       end
     }
     @@ing.rollback
@@ -89,7 +89,7 @@ class TestIngresTransactionSavePoints < Test::Unit::TestCase
       @@ing.savepoint "savepoint_#{data_set[0]}"
       if (data_set[0]) == 5
         @@ing.rollback "savepoint_3"
-        assert_equal 3, @@ing.execute("select max(id) from savepoint_tests")[0]
+        assert_equal 3, @@ing.execute("select max(id) from savepoint_tests").flatten[0]
       end
     }
     assert_raise RuntimeError do

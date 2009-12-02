@@ -2,7 +2,7 @@ require 'Ingres'
 require 'test/unit'
 require 'tests/config.rb'
 
-class TestIngresConnection < Test::Unit::TestCase
+class TestIngresDualConnections < Test::Unit::TestCase
 
   def test_dual_connections
     ing = Ingres.new()

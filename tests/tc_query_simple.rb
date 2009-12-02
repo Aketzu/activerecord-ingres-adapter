@@ -15,7 +15,7 @@ class TestIngresQuerySimple < Test::Unit::TestCase
 
   def test_query_username
     # ing.execute returns and array so we want the first and only element
-    assert_equal @@username, @@ing.execute("select dbmsinfo('session_user')")[0]
+    assert_equal @@username, @@ing.execute("select dbmsinfo('session_user')").flatten[0]
   end
 
   def test_tables
