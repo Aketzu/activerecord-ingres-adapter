@@ -193,7 +193,7 @@ ii_api_init ()
 /* 
  * Document-method: new
  *
- * Initialises a new instance of Ingres.
+ * Initializes a new instance of Ingres.
  *
  * call-seq:
  *    Ingres.new() -> Ingres
@@ -567,7 +567,7 @@ ii_api_connect (II_CONN *ii_conn, char *param_targetDB, char *param_username, ch
  * call-seq:
  *    Ingres.set_environment(environment_hash) -> nil
  *
- * Method used to configure the environment settings for a Ruby application.
+ * Configures the environment settings for a Ruby application.
  *
  * Valid hash keys are:
  *
@@ -627,10 +627,10 @@ ii_set_environment (int param_argc, VALUE *param_argv, VALUE param_self)
  *    Ingres.connect(connection_hash) -> Ingres
  *    Ingres.connect(database[, username, password]) -> Ingres
  *
- * Make a connection to an Ingres database.
+ * Makes a connection to an Ingres database.
  *
  * _connection_hash_ keys:
- * * +database+ - database to connect to in either of the following forms
+ * * +database+ - database to connect to in either of the following forms:
  *    [vnode::]database[/svrclass]
  *    @hostname,tcp_ip,listen_address[username,password]::database
  * * +username+ - username to use for connection. 
@@ -762,7 +762,7 @@ ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
 /*
  * Document-method: disconnect
  *
- * Disconnect from associated database
+ * Disconnects from the associated database
  *
  * call-seq: 
  *    Ingres.disconnect ()
@@ -890,8 +890,8 @@ ii_commit (VALUE param_self)
  * call-seq:
  *    Ingres.rollback([savepoint])
  *
- * Rollback the current transaction against the associated database
- * connection to the named savepoint. If no savepoint is specified the
+ * Rolls back the current transaction against the associated database
+ * connection to the named savepoint. If no savepoint is specified, the
  * transaction is rolled back to the last commit point and all savepoints 
  * created by savepoint are released.
  *
@@ -3156,8 +3156,8 @@ ii_execute_query (II_CONN *ii_conn, char *param_sqlText, int param_argc, VALUE p
  * call-seq:
  *    Ingres.execute(sql[ param_types, param_values]) -> Array
  *
- * Execute the supplied _sql_ statement returning the results as a
- * 2-dimensional Array. The first dimension represents each row and the 
+ * Executes the supplied _sql_ statement returning the results as a
+ * two-dimensional Array. The first dimension represents each row, and the 
  * second dimension represents each column within the row. _param_types_ is
  * a string of letters, with each letter representing the type of each
  * parameter being passed.
@@ -3316,7 +3316,7 @@ ii_execute (int param_argc, VALUE * param_argv, VALUE param_self)
  * call-seq:
  *    Ingres.tables() -> Array
  *
- * Return a list of all the tables in the database associated with this instance.
+ * Returns a list of all the tables in the database associated with this instance.
  *
  * Example usage:
  *
@@ -3353,7 +3353,7 @@ ii_tables (VALUE param_self)
  * call-seq:
  *    Ingres.current_database() -> String
  *
- * Return the name of associated database, if connected.
+ * Returns the name of associated database, if connected.
  *
  * Example usage:
  *
@@ -3418,7 +3418,7 @@ ii_crash_it (VALUE param_self) //:nodoc
  * call-seq:
  *    Ingres.rows_affected() -> Fixnum
  *
- * Return the number of rows affected by the last SQL statement.
+ * Returns the number of rows affected by the last SQL statement.
  *
  *   conn = Ingres.new()
  *   conn = Ingres.connect(:database => "demodb")
@@ -3447,7 +3447,7 @@ ii_rows_affected (VALUE param_self)
  * call-seq:
  *    Ingres.data_types() -> Array
  *
- * Returns and Array of data types names for the last SQL SELECT statement executed.
+ * Returns an Array of data types names for the last SQL SELECT statement executed.
  *
  *   conn = Ingres.new()
  *   conn = Ingres.connect(:database => "demodb")
@@ -3536,7 +3536,7 @@ ii_data_sizes (VALUE param_self)
  * call-seq:
  *    Ingres.set_debug_flag(flag, flag_value) -> nil
  *
- * To turn trace debugging on or off
+ * Turns trace debugging on or off
  *
  * Valid values:
  * * _flag_ can be one of  <tt>GLOBAL_DEBUG</tt>, <tt>DEBUG_TRANSACTIONS</tt>, <tt>DEBUG_SQL</tt>, <tt>DEBUG_TERMINATION</tt>
@@ -3624,7 +3624,7 @@ size_t STtrmwhite (register char *string)
  * 
  * Document-class: Ingres
  *
- * The class to access the Ingres RDBMS via OpenAPI
+ * This class accesses the Ingres RDBMS through OpenAPI
  *
  * For example, to execute a simple query
  *    require 'Ingres'
@@ -3632,7 +3632,7 @@ size_t STtrmwhite (register char *string)
  *    ing.connect(:database => 'demodb')
  *    result = ing.execute('SELECT * from user_profile')
  * 
- * See README.rdoc, for information about obtaining and installing the 
+ * See README.rdoc for information about obtaining and installing the 
  * Ingres Ruby Driver.
  */
 void
