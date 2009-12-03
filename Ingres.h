@@ -68,6 +68,10 @@
 #define MAX_CHAR_SIZE		        32000  /* max #bytes Ingres (var)char */
 #define LOB_SEGMENT_SIZE 8192
 
+/* Ingres 2.6 is missing a define for IIAPI_CPV_DFRMT_ISO4 */
+#if !defined(IIAPI_CPV_DFRMT_ISO4)
+  #define IIAPI_CPV_DFRMT_ISO4 9
+#endif
 
 /* Query types */
 
