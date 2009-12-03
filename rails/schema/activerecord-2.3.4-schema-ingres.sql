@@ -2,6 +2,7 @@
 create sequence accounts_id;\p\g
 create table accounts(
 	id integer not null default accounts_id.nextval primary key,
+	firm_name varchar(255),
 	firm_id integer,
 	credit_limit integer
 )
