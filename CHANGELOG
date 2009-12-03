@@ -1,4 +1,6 @@
 SVN
+- Default to "id" for the :primary_key column in ActiveRecord if no 
+  PRIMARY KEY constraint is defined
 - Update the documentation using RDoc
 - Add Ingres.set_environment()
 - Add the ability to set the date format for ingresdate values at connection

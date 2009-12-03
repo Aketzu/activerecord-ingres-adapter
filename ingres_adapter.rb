@@ -59,6 +59,9 @@
 #           Set the connection :date_format to Ingres::DATE_FORMAT_FINLAND
 #           eliminating the need to configure II_DATE_FORMAT in the local 
 #           environment
+#       12/01/09 (grant.croker@ingres.com)
+#           Default to "id" as the primary key column if no primary key is defined
+#           with the table schema
 #            
 #++
 
@@ -322,7 +325,8 @@ module ActiveRecord
              end
          end
 
-         #Fetch the column used as a primary key in the join
+         # Fetch the column used as a primary key in the join
+         # TODO Handle a primary key added using ALTER TABLE
          def primary_key(table)
             complete_trace(" in primary_key(#{table}) ")
             sql =  "SELECT column_name "
@@ -333,7 +337,8 @@ module ActiveRecord
             sql << "AND   iicolumns.column_name != 'tidp' "
             sql << "ORDER BY iicolumns.column_sequence "
             primary_key = @connection.execute(sql).first
-            primary_key
+            primary_key = "id" if primary_key == nil
+            return primary_key
          end
 
          def get_data_size(id)
@@ -622,7 +627,7 @@ module ActiveRecord
          end
 
          def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil) #:nodoc:
-            super sql, name
+            execute sql, name
             id_value
          end
 
@@ -662,6 +667,11 @@ module ActiveRecord
             complete_trace(" in delete(#{sql}, #{name} ")
             execute(sql, name)
             return @connection.rows_affected
+         end
+
+         # Returns the last auto-generated ID from the affected table.
+         def insert(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+            insert_sql(sql, name, pk, id_value, sequence_name)
          end
 
          def execute(sql, name = nil) #:nodoc:
