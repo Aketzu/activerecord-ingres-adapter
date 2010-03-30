@@ -26,6 +26,8 @@
 **              11/09/2009 (grant.croker@ingres.com)
 **                  Add the ability to set the date format for Ingres date values
 **                  from within Ruby 
+**              03/30/2010 (grant.croker@ingres.com)
+**                      Fix #565 - Compilation errors with Redhat ES 5.4 (x86-64)
 */
 
 /* Constants */
@@ -295,6 +297,17 @@ FUNC_EXTERN char *CMgetCaseTab ();
 /* available via Ingres Compatibility Layer */
 /* TODO - Remove dependency on the Ingres CL */
 size_t STtrmwhite (register char *string);
+
+/* Certain Ruby releases shipped with different Linux distributions do not contain
+ * the necessary defines. E.g. RedHat ES 5.4 ships with Ruby 1.8.5.
+ */
+#ifdef RUBY_VERSION_CODE
+#  if RUBY_VERSION_CODE < 186
+#    define RARRAY_LEN(s) (RARRAY(s)->len)
+#    define RSTRING_PTR(s) (RSTRING(s)->ptr)
+#    define RSTRING_LEN(s) (RSTRING(s)->len)
+#  endif /* RUBY_VERSION_CODE < 186 */
+#endif
 
 /*
 vim:  ts=2 sw=2 expandtab
