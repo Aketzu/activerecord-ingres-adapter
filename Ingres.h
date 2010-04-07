@@ -28,7 +28,11 @@
 **                  from within Ruby 
 **              03/30/2010 (grant.croker@ingres.com)
 **                      Fix #565 - Compilation errors with Redhat ES 5.4 (x86-64)
+**              04/07/2010 (grant.croker@ingres.com)
+**                      Add missing #include for version.h
 */
+
+#include <version.h>
 
 /* Constants */
 #define RUBY_INGRES_VERSION "1.4.0"
