@@ -66,6 +66,8 @@
 **              11/09/2009 (grant.croker@ingres.com)
 **                      Add the ability to set the date format for Ingres date values
 **                      from within Ruby.
+**              07/28/2010 (grant.croker@ingres.com)
+**                      Fix bug #555 - SEGV when using memcpy with BLOB data
 **                      
  */
 
@@ -664,6 +666,7 @@ ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
   II_CONN *ii_conn = NULL;
   int db_length = 0;
   int param_no = 0;
+  VALUE maxSegmentSize = INT2FIX(LOB_SEGMENT_SIZE);
 
   if (ii_globals.debug)
     printf ("Entering %s.\n", function_name);
@@ -749,6 +752,8 @@ ii_connect (int param_argc, VALUE *param_argv, VALUE param_self)
   ii_conn->currentDatabase = ALLOC_N (char, db_length + 1);
   memcpy (ii_conn->currentDatabase, StringValuePtr(param_targetDB), db_length);
   ii_conn->currentDatabase[db_length] = '\0';
+
+  ii_api_set_env_param (IIAPI_EP_MAX_SEGMENT_LEN, maxSegmentSize);
 
   if (ii_globals.debug || ii_globals.debug_connection)
     printf ("%s: Set ii_conn->currentDatabase to %s\n", function_name, ii_conn->currentDatabase);
@@ -2936,7 +2941,7 @@ processField (II_CONN * ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData, int pa
 }
 
 
-int getColumn (II_CONN  *ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData)
+int getColumn (II_CONN  *ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData, II_LONG param_columnType)
 {
   IIAPI_GETCOLPARM getColParm;
   IIAPI_DATAVALUE *dataValue = param_columnData->dataValue;
@@ -2945,8 +2950,8 @@ int getColumn (II_CONN  *ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData)
   char *buffer = NULL;
   char *bufferPtr = NULL;
   char function_name[] = "getColumn";
-  short int segmentLen;
-  long newBufferLen;
+  short int segmentLen = 0;
+  char *lob_data = NULL;
 
   if (ii_globals.debug)
     printf ("Entering %s.\n", function_name);
@@ -2973,18 +2978,31 @@ int getColumn (II_CONN  *ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData)
       break;
     }
 
-    param_columnData->dv_length = dataValue->dv_length;
-
-    if (getColParm.gc_moreSegments)
+    /* Size of the data being returned is in the first 2 bytes of dataValue->dv_value */
+    if (param_columnType == IIAPI_LVCH_TYPE ||
+        param_columnType == IIAPI_LBYTE_TYPE ||
+        param_columnType == IIAPI_LNVCH_TYPE)
     {
+        param_columnData->dv_length = *(II_INT2 *)dataValue->dv_value;
+    }
+    else
+    {
+        param_columnData->dv_length = dataValue->dv_length;
+    }
+
+    /* Handle LOB data slightly differently */
+    if (param_columnType == IIAPI_LVCH_TYPE ||
+        param_columnType == IIAPI_LBYTE_TYPE ||
+        param_columnType == IIAPI_LNVCH_TYPE)
+    {
+      /* Copy the first two bytes of dataValue->dv_value to get the length */
+      /* of the data fetched from the server */
       memcpy ((char *) &segmentLen, dataValue->dv_value, 2);
-      newBufferLen = bufferLen + segmentLen;
 
       if (buffer == NULL)
       {
         /* Init buffer to place LOB data */
         buffer = ii_allocate(LOB_SEGMENT_SIZE, sizeof(char *));
-        bufferLen = LOB_SEGMENT_SIZE;
         bufferPtr = buffer;
       }
       else
@@ -2994,11 +3012,11 @@ int getColumn (II_CONN  *ii_conn, RUBY_IIAPI_DATAVALUE * param_columnData)
         ** buffer for every lob segment (approx 4K bytes each).  See
         ** Ingres ODBC driver for more efficient algorithm.
         */
-        buffer = ii_reallocate (buffer, newBufferLen + 1, sizeof(char));
-        bufferPtr = buffer + newBufferLen;
+        buffer = ii_reallocate (buffer, bufferLen + segmentLen + 1, sizeof(char));
+        bufferPtr = buffer + bufferLen;
       }
       memcpy (bufferPtr, (char *)dataValue->dv_value + 2, segmentLen);
-      bufferLen = newBufferLen;
+      bufferLen += segmentLen;
       param_columnData->dv_length = bufferLen;
     }
   }
@@ -3036,7 +3054,7 @@ processColumn (II_CONN *ii_conn, VALUE * param_values, int param_columnNumber, I
   memset (tmp, 0, param_descrParm->ds_length + 1);
   columnData.dataValue[0].dv_value = tmp;
 
-  if (getColumn (ii_conn, &columnData) >= IIAPI_ST_NO_DATA)
+  if (getColumn (ii_conn, &columnData, param_descrParm->ds_dataType ) >= IIAPI_ST_NO_DATA)
   {
     /* we've reached the end of the data */
     done = TRUE;
