@@ -1,6 +1,6 @@
 require 'Ingres'
 require 'test/unit'
-require 'tests/config.rb'
+require 'ext/tests/config.rb'
 
 class TestIngresTypeDateFetch< Test::Unit::TestCase
   def setup

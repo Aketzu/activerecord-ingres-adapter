@@ -66,9 +66,11 @@
 #++
 
 
-
+require 'active_record'
 require 'active_record/connection_adapters/abstract_adapter'
-require 'pp'
+require 'active_support/core_ext/kernel/requires'
+require 'active_support/core_ext/string'
+#require 'pp'
 
 #debug print routines
 

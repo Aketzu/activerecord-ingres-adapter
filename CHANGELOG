@@ -1,5 +1,6 @@
 SVN
-- Fix #555 - SEGV when fetching LOB data
+- Fix #651 - Add support for building a Ruby Gem
+- Fix #555 - SEGV when fetcing LOB data
 - Fix #565 - Compilation errors with Redhat ES 5.4 (x86-64)
 
 version 1.4.0

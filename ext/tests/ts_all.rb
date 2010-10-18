@@ -21,8 +21,8 @@
 
 # Test case for local connection
 #
-require 'tests/ts_connect.rb'
-require 'tests/ts_execute.rb'
-require 'tests/ts_types.rb'
-require 'tests/ts_transactions.rb'
-require 'tests/ts_environment.rb'
+require 'ext/tests/ts_connect.rb'
+require 'ext/tests/ts_execute.rb'
+require 'ext/tests/ts_types.rb'
+require 'ext/tests/ts_transactions.rb'
+require 'ext/tests/ts_environment.rb'

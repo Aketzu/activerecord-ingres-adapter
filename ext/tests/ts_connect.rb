@@ -1,0 +1,5 @@
+require 'ext/tests/tc_connect.rb'
+require 'ext/tests/tc_connect_with_login_only.rb'
+require 'ext/tests/tc_connect_with_login_password.rb'
+require 'ext/tests/tc_dual_connections.rb'
+require 'ext/tests/tc_connect_hash.rb'
