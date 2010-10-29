@@ -68,6 +68,9 @@
 **                      from within Ruby.
 **              07/28/2010 (grant.croker@ingres.com)
 **                      Fix bug #555 - SEGV when using memcpy with BLOB data
+**              10/29/2010 (grant.croker@ingres.com)
+**                      Fix bug #656 - getProcedureName() fails to NULL terminate the
+**                      parsed procedure name.
 **                      
  */
 
@@ -1369,6 +1372,7 @@ getProcedureName (char *param_sqlText)
 
     procedureName = ALLOC_N (char, proc_len + 1);
     memcpy (procedureName, start, proc_len);
+    procedureName[proc_len] = '\0';
   }
 
   if (ii_globals.debug)

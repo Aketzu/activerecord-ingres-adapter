@@ -1,4 +1,5 @@
 SVN
+- Fix #656 - getProcedureName() returns a non-NULL terminated procedure name
 - Fix #653 - Update s.date dynamically for each release
 - Fix #651 - Add support for building a Ruby Gem
 - Fix #555 - SEGV when fetcing LOB data
