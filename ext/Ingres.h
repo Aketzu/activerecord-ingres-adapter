@@ -35,7 +35,7 @@
 #include <version.h>
 
 /* Constants */
-#define RUBY_INGRES_VERSION "1.4.0"
+#define RUBY_INGRES_VERSION "1.4.1"
 #define RUBY_INGRES_API IIAPI_VERSION
 
 #define RUBY_STRING    			"STRING"

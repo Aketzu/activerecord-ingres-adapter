@@ -1,4 +1,4 @@
-= Ingres Ruby ActiveRecord Adapter/Driver Version 1.4.0
+= Ingres Ruby ActiveRecord Adapter/Driver Version 1.4.1
 
 == Welcome
 
