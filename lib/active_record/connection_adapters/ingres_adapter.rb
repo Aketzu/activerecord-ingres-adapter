@@ -68,7 +68,7 @@
 
 require 'active_record'
 require 'active_record/connection_adapters/abstract_adapter'
-require 'active_support/core_ext/kernel/requires'
+#require 'active_support/core_ext/kernel/requires'
 require 'active_support/core_ext/string'
 #require 'pp'
 
@@ -100,7 +100,7 @@ module ActiveRecord
    class Base
       # Establishes a connection to the database that's used by all Active Record objects
       def self.ingres_connection(config) # :nodoc:
-         require_library_or_gem 'Ingres' unless self.class.const_defined?(:Ingres)
+         require 'Ingres' unless self.class.const_defined?(:Ingres)
 
          complete_trace("in ingres_connection(config) ")
 

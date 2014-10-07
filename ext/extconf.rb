@@ -73,6 +73,10 @@ if have_header('iiapi.h')
     end 
     $OBJS=['Unicode.o','Ingres.c']
 
+    if RUBY_VERSION.to_f >= 1.9
+      $CFLAGS << ' -DRUBY_19_COMPATIBILITY'
+    end
+
     create_makefile('Ingres')
 else
     puts "Unable to find iiapi.h, please verify your setup"

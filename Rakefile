@@ -1,13 +1,13 @@
 require 'rubygems'
-require 'rake/gempackagetask'
-require 'rake/rdoctask'
+require 'rubygems/package_task'
+require 'rdoc/task'
 require 'rake/testtask'
 
 spec = Gem::Specification.new do |s|
   s.authors = ["Grant Croker","Bruce Lunsford","Jared Richardson"]
   s.email = "grant.croker@ingres.com"
   s.name = "activerecord-ingres-adapter"
-  s.version = "1.4.1"
+  s.version = "1.4.2"
   s.date = Time.now.localtime.strftime("%Y-%m-%d")
   s.summary = "ActiveRecord Ingres Adapter"
   s.description = "ActiveRecord Ingres Adapter and driver for the Ingres Enterprise Relational Database"
@@ -21,7 +21,7 @@ spec = Gem::Specification.new do |s|
   s.files = Dir['ext/**/*', 'lib/**/*','lib/active_record/connection_adapters/*','CHANGELOG','LICENSE.txt','TODO.txt', 'Rakefile','cookbook_ingres.sql']
 end
 
-Rake::GemPackageTask.new(spec) do |pkg|
+Gem::PackageTask.new(spec) do |pkg|
   pkg.need_tar = true
   pkg.need_zip = true
 end

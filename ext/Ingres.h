@@ -32,7 +32,7 @@
 **                      Add missing #include for version.h
 */
 
-#include <version.h>
+/* #include <version.h> */
 
 /* Constants */
 #define RUBY_INGRES_VERSION "1.4.1"
