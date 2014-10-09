@@ -257,19 +257,19 @@ module ActiveRecord
         end
       end
 
-      # Fetch the column used as a primary key in the join
-      # TODO Handle a primary key added using ALTER TABLE
+      # Returns just a table's primary key
       def primary_key(table)
-        sql =  "SELECT column_name "
-        sql << "FROM iicolumns, iiconstraints "
-        sql << "WHERE iiconstraints.table_name = '#{table}' "
-        sql << "AND   iiconstraints.constraint_name = iicolumns.table_name " 
-        sql << "AND   iiconstraints.constraint_type = 'P' "
-        sql << "AND   iicolumns.column_name != 'tidp' "
-        sql << "ORDER BY iicolumns.column_sequence "
-        primary_key = @connection.execute(sql).first
-        primary_key = "id" if primary_key == nil
-        return primary_key
+        row = @connection.execute(<<-end_sql).first
+          SELECT column_name
+          FROM iicolumns, iiconstraints
+          WHERE iiconstraints.table_name = '#{table}'
+          AND iiconstraints.constraint_name = iicolumns.table_name
+          AND iiconstraints.constraint_type = 'P'
+          AND iicolumns.column_name != 'tidp'
+          ORDER BY iicolumns.column_sequence
+        end_sql
+
+        row && row.first
       end
 
       def get_data_size(id)
