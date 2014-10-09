@@ -575,14 +575,6 @@ module ActiveRecord
       end
 
       def execute(sql, name = nil) #:nodoc:
-        # debug print
-        if(1==2) then
-          bad_sql = "auto_id_tests"
-          if(sql.include?bad_sql) then
-            my_print_exception(bad_sql)
-          end
-        end
-
         sql = add_ordering(sql)
 
         # Ingres does not like UPDATE statements that have a sub-SELECT that uses
@@ -592,7 +584,7 @@ module ActiveRecord
         end
 
         begin
-          result = log(sql, name) { @connection.execute(sql) }
+          result = @connection.execute(sql)
         rescue
           puts "\nAn error occurred!\n"
           print_exception()
@@ -611,16 +603,8 @@ module ActiveRecord
         sql.gsub!(" = NULL", " is NULL")
         sql.gsub!(" IN (NULL)", " is NULL")
 
-        # debug print
-        if(1==2) then
-          bad_sql = "auto_id_tests"
-          if(sql.include?bad_sql) then
-            my_print_exception(bad_sql)
-          end
-        end
-
         begin
-          rs = log(sql, name) { @connection.execute(sql) }
+          rs = @connection.execute(sql)
         rescue
           puts "\nAn error occurred!\n"
           print_exception()
