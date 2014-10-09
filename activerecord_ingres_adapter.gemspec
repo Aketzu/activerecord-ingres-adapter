@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name = "activerecord-ingres-adapter"
-  s.version = "1.4.8"
+  s.version = "1.4.9"
   s.summary = "ActiveRecord Ingres Adapter"
   s.email = "felix.bellanger@gmail.com"
   s.homepage = "https://github.com/Keeguon/activerecord-ingres-adapter"
@@ -17,5 +17,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.extensions    = ['ext/extconf.rb']
 
-  s.add_dependency("arel", "~> 3.0.2")
+  #s.add_dependency("arel", "~> 3.0.2")
 end
