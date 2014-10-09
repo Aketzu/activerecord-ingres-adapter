@@ -27,7 +27,7 @@ Gem::PackageTask.new(spec) do |pkg|
 end
 
 Rake::TestTask.new do |t|
-    t.libs << "ext/tests"
-    t.test_files = FileList['ext/tests/ts_*.rb','ext/tests/tc_*.rb']
-    t.verbose = true
+  t.libs << "ext/tests"
+  t.test_files = FileList['ext/tests/ts_*.rb','ext/tests/tc_*.rb']
+  t.verbose = true
 end
