@@ -718,8 +718,8 @@ module ActiveRecord
       end
 
       def columns(table_name, name = nil) #:nodoc:
-        column_definitions(table_name).collect do |column_name, type, default|
-          new_column(column_name, default, type)
+        column_definitions(table_name).collect do |row|
+          new_column(row["column_name"], row["column_default_val"], row["column_datatype"])
         end
       end
 
