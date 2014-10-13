@@ -223,8 +223,40 @@ module ActiveRecord
                                         config.fetch(:statement_limit) { 1000 })
       end
 
+      def clear_cache!
+        @statements.clear
+      end
+
+      def active?
+        @connection.exec 'SELECT 1'
+        true
+      rescue Exception
+        false
+      end
+
+      def reconnect!
+        disconnect!
+        clear_cache!
+        connect
+      end
+
+      def reset!
+        clear_cache!
+        super
+      end
+
+      def disconnect!
+        @connection.disconnect rescue nil
+      end
+
       def native_database_types
         NATIVE_DATABASE_TYPES
+      end
+
+      # HELPER METHODS ===========================================
+
+      def new_column(column_name, default, type)
+        IngresColumn.new(column_name, default, type)
       end
 
       # Ingres supports a different SQL syntax for column type definitions
@@ -686,18 +718,9 @@ module ActiveRecord
       end
 
       def columns(table_name, name = nil) #:nodoc:
-        sql = "SELECT column_name, column_default_val, column_datatype, column_length FROM iicolumns  "
-        sql << "WHERE table_name='#{table_name}' "
-        sql << "ORDER BY column_sequence "
-        columns = []
-        execute_without_adding_ordering(sql, name).each do |row|
-          default_value = default_value(row["column_default_val"])
-          sql_type = sql_type_name(row["column_datatype"], row["column_length"])
-          cast_type = lookup_cast_type(sql_type)
-          data_size = get_data_size(row["column_name"])
-          columns << IngresColumn.new(row["column_name"], default_value, cast_type, sql_type, row["notnull"])
+        column_definitions(table_name).collect do |column_name, type, default|
+          new_column(column_name, default, type)
         end
-        columns
       end
 
       # Ingres 9.1.x and earlier require 'COLNAME TYPE DEFAULT NULL WITH NULL' as part of the column definition
@@ -868,13 +891,16 @@ module ActiveRecord
           end
         end
 
-        if (1==2) then
-          puts "rows.class=#{rows.class}\n"
-          puts "\n\n rows is: \n"
-          rows.each { |x| x.each {|y| puts y } }
-        end
-
         rows
+      end
+
+      def column_definitions(table_name)
+        execute_without_adding_ordering(<<-end_sql, 'SCHEMA')
+          SELECT column_name, column_datatype, column_default_val
+          FROM iicolumns
+          WHERE table_name='#{table_name}'
+          ORDER BY column_sequence
+        end_sql
       end
 
       def default_value(value)
