@@ -685,7 +685,7 @@ module ActiveRecord
         tables
       end
 
-      def columns(table_name) #:nodoc:
+      def columns(table_name, name = nil) #:nodoc:
         sql = "SELECT column_name, column_default_val, column_datatype, column_length FROM iicolumns  "
         sql << "WHERE table_name='#{table_name}' "
         sql << "ORDER BY column_sequence "
