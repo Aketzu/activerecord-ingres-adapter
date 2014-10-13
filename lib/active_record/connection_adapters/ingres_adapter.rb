@@ -274,7 +274,7 @@ module ActiveRecord
           #                        exec_cache(sql, binds)
           result = @connection.execute(sql)
 
-          ret = ActiveRecord::Result.new(@connection.column_list_of_names, result, @connection.data_types)
+          ret = ActiveRecord::Result.new(@connection.column_list_of_names, result)
           result.clear
           return ret
         end
