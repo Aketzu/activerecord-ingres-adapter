@@ -171,37 +171,37 @@ module ActiveRecord
         ADAPTER_NAME
       end
 
-      #class StatementPool < ConnectionAdapters::StatementPool
-      #  def initialize(connection, max = 1000)
-      #    super
-      #    @cache   = Hash.new { |h,pid| h[pid] = {} }
-      #  end
+      class StatementPool < ConnectionAdapters::StatementPool
+        def initialize(connection, max = 1000)
+          super
+          @cache   = Hash.new { |h,pid| h[pid] = {} }
+        end
 
-      #  def each(&block); cache.each(&block); end
-      #  def key?(key);    cache.key?(key); end
-      #  def [](key);      cache[key]; end
-      #  def length;       cache.length; end
-      #  def delete(key);  cache.delete(key); end
+        def each(&block); cache.each(&block); end
+        def key?(key);    cache.key?(key); end
+        def [](key);      cache[key]; end
+        def length;       cache.length; end
+        def delete(key);  cache.delete(key); end
 
-      #  def []=(sql, key)
-      #    while @max < cache.size
-      #      cache.shift.last[:stmt].close
-      #    end
-      #    cache[sql] = key
-      #  end
+        def []=(sql, key)
+          while @max < cache.size
+            cache.shift.last[:stmt].close
+          end
+          cache[sql] = key
+        end
 
-      #  def clear
-      #    cache.values.each do |hash|
-      #      hash[:stmt].close
-      #    end
-      #    cache.clear
-      #  end
+        def clear
+          cache.values.each do |hash|
+            hash[:stmt].close
+          end
+          cache.clear
+        end
 
-      #  private
-      #  def cache
-      #    @cache[$$]
-      #  end
-      #end
+        private
+        def cache
+          @cache[$$]
+        end
+      end
 
       class BindSubstitution < Arel::Visitors::Ingres # :nodoc:
         include Arel::Visitors::BindVisitor
@@ -219,7 +219,7 @@ module ActiveRecord
         @connection_parameters, @config = connection_parameters, config
 
         connect
-        @statements = StatementPool.new(@conection,
+        @statements = StatementPool.new(@connection,
                                         config.fetch(:statement_limit) { 1000 })
       end
 
