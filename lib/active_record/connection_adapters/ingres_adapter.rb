@@ -28,66 +28,68 @@ module ActiveRecord
 
   module ConnectionAdapters
     class IngresColumn < Column #:nodoc:
-      def initialize(name, default, sql_type = nil, null = true)
-        super(name, default, sql_type, null)
+      def initialize(name, default, cast_type, sql_type = nil, null = true, default_function = nil)
+        super(name, default, cast_type, sql_type, null)
+
+        @default_function = default_function
       end
 
-      def value_to_boolean(str)
-        return (str.to_i == 0 ? 0 : 1)
-      end
+      #def value_to_boolean(str)
+      #  return (str.to_i == 0 ? 0 : 1)
+      #end
 
-      def type_cast(value)
-        return nil if value.nil?
-        case @type
-        when :string    then value
-        when :text      then value
-        when :float     then value.to_f
-        when :decimal   then self.class.value_to_decimal(value)
-        when :binary    then self.class.binary_to_string(value)
-        when :boolean   then self.class.value_to_boolean(value)
-        when :integer   then value.to_i rescue value ? 1 : 0
-        when :datetime  then self.class.string_to_time(value)
-        when :timestamp then self.class.string_to_time(value)
-        when :time      then self.class.string_to_dummy_time(value)
-        when :date
-          res = self.class.string_to_date(value)
-          if(@name =~ /_time$/ ) then
-            value=value[11,19]
-            value = "2000-01-01 " << value
-            res = Time.parse(value)
-          else
-            res = self.class.string_to_date(value)
-          end
-          res
-        else
-          value
-        end
-      end
+      #def type_cast(value)
+      #  return nil if value.nil?
+      #  case @type
+      #  when :string    then value
+      #  when :text      then value
+      #  when :float     then value.to_f
+      #  when :decimal   then self.class.value_to_decimal(value)
+      #  when :binary    then self.class.binary_to_string(value)
+      #  when :boolean   then self.class.value_to_boolean(value)
+      #  when :integer   then value.to_i rescue value ? 1 : 0
+      #  when :datetime  then self.class.string_to_time(value)
+      #  when :timestamp then self.class.string_to_time(value)
+      #  when :time      then self.class.string_to_dummy_time(value)
+      #  when :date
+      #    res = self.class.string_to_date(value)
+      #    if(@name =~ /_time$/ ) then
+      #      value=value[11,19]
+      #      value = "2000-01-01 " << value
+      #      res = Time.parse(value)
+      #    else
+      #      res = self.class.string_to_date(value)
+      #    end
+      #    res
+      #  else
+      #    value
+      #  end
+      #end
 
-      def type_cast_code(var_name)
-        case type
-        when :string    then nil
-        when :text      then nil
-        when :integer   then "(#{var_name}.to_i rescue #{var_name} ? 1 : 0)"
-        when :float     then "#{var_name}.to_f"
-        when :decimal   then "#{self.class.name}.value_to_decimal(#{var_name})}"
-        when :datetime  then "#{self.class.name}.string_to_time(#{var_name})"
-        when :timestamp then "#{self.class.name}.string_to_time(#{var_name})"
-        when :time      then "#{self.class.name}.string_to_dummy_time(#{var_name})"
-        when :binary    then "#{self.class.name}.binary_to_string(#{var_name})"
-        when :boolean   then "#{self.class.name}.value_to_boolean(#{var_name})"
-        when :date
-          str = "if(@name =~ /_time$/ ) then \n"
-          str << " #{var_name}=#{var_name}[11,19] \n"
-          str << " value = '2000-01-01' << #{var_name} \n"
-          str << " res = #{self.class.name}.string_to_time(#{var_name}) \n"
-          str << " else \n"
-          str << " res = #{self.class.name}.string_to_date(#{var_name}) \n"
-          str << " end\n"
-          str
-        else nil
-        end
-      end
+      #def type_cast_code(var_name)
+      #  case type
+      #  when :string    then nil
+      #  when :text      then nil
+      #  when :integer   then "(#{var_name}.to_i rescue #{var_name} ? 1 : 0)"
+      #  when :float     then "#{var_name}.to_f"
+      #  when :decimal   then "#{self.class.name}.value_to_decimal(#{var_name})}"
+      #  when :datetime  then "#{self.class.name}.string_to_time(#{var_name})"
+      #  when :timestamp then "#{self.class.name}.string_to_time(#{var_name})"
+      #  when :time      then "#{self.class.name}.string_to_dummy_time(#{var_name})"
+      #  when :binary    then "#{self.class.name}.binary_to_string(#{var_name})"
+      #  when :boolean   then "#{self.class.name}.value_to_boolean(#{var_name})"
+      #  when :date
+      #    str = "if(@name =~ /_time$/ ) then \n"
+      #    str << " #{var_name}=#{var_name}[11,19] \n"
+      #    str << " value = '2000-01-01' << #{var_name} \n"
+      #    str << " res = #{self.class.name}.string_to_time(#{var_name}) \n"
+      #    str << " else \n"
+      #    str << " res = #{self.class.name}.string_to_date(#{var_name}) \n"
+      #    str << " end\n"
+      #    str
+      #  else nil
+      #  end
+      #end
 
 
       private
@@ -683,31 +685,17 @@ module ActiveRecord
         tables
       end
 
-      def columns(table_name, name = nil) #:nodoc:
-
+      def columns(table_name) #:nodoc:
         sql = "SELECT column_name, column_default_val, column_datatype, column_length FROM iicolumns  "
         sql << "WHERE table_name='#{table_name}' "
         sql << "ORDER BY column_sequence "
         columns = []
         execute_without_adding_ordering(sql, name).each do |row|
-          default_value = default_value( row["column_default_val"])
-          column_type = sql_type_name( row["column_datatype"], row["column_length"])
-
-          if (1==2) then
-            puts "\n---\n"
-            puts row["column_name"]
-            puts default_value
-            puts column_type
-          end
+          default_value = default_value(row["column_default_val"])
+          sql_type = sql_type_name(row["column_datatype"], row["column_length"])
+          cast_type = lookup_cast_type(sql_type)
           data_size = get_data_size(row["column_name"])
-
-          column_type_hash = { "data_size" => data_size, "column_type" => column_type}
-
-          columns << IngresColumn.new(row["column_name"],
-                                      default_value,
-                                      column_type_hash,
-                                      row["notnull"]
-                                     )
+          columns << IngresColumn.new(row["column_name"], default_value, cast_type, sql_type, row["notnull"])
         end
         columns
       end
@@ -907,13 +895,6 @@ module ActiveRecord
       end
 
       def sql_type_name(type_name, length)
-        if(2==3) then
-          puts "\n In sql_type_name \n"
-          puts "\n-------------\n"
-          puts "type_name=#{type_name} and length=(#{length})"
-          puts "\n-------------\n"
-        end
-
         if( (type_name=="INTEGER") && (length.to_s=="1") ) then
           return "BOOLEAN"
         end
