@@ -272,11 +272,9 @@ module ActiveRecord
           #TODO Aiming to do prepared statements but we'll have to do changes to the C API
           #result = binds.empty? ? exec_no_cache(sql, binds) :
           #                        exec_cache(sql, binds)
-          result = @connection.execute(sql)
+          result = @connection.execute(sql, binds)
 
-          ret = ActiveRecord::Result.new(@connection.column_list_of_names, result)
-          result.clear
-          return ret
+          ActiveRecord::Result.new(@connection.column_list_of_names, result)
         end
       end
 
