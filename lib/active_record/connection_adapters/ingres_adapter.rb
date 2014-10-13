@@ -592,13 +592,13 @@ module ActiveRecord
         return result
       end
 
-      def execute_with_result_set(sql, name = nil, binds = []) #:nodoc:
+      def execute_with_result_set(sql, name = nil) #:nodoc:
         sql = add_ordering(sql)
         rows = execute_without_adding_ordering(sql)
         return rows
       end
 
-      def execute_without_adding_ordering(sql, name=nil, binds = {})
+      def execute_without_adding_ordering(sql, name=nil)
         # TODO: clean up this hack
         sql.gsub!(" = NULL", " is NULL")
         sql.gsub!(" IN (NULL)", " is NULL")
