@@ -259,6 +259,27 @@ module ActiveRecord
         IngresColumn.new(column_name, default, type)
       end
 
+      # DATABASE STATEMENTS ======================================
+
+      def execute(sql, name = nil)
+        log(sql, name) do
+          @connection.execute(sql)
+        end
+      end
+
+      def exec_query(sql, name = 'SQL', binds = [])
+        log(sql, name, binds) do
+          #TODO Aiming to do prepared statements but we'll have to do changes to the C API
+          #result = binds.empty? ? exec_no_cache(sql, binds) :
+          #                        exec_cache(sql, binds)
+          result = @connection.execute(sql)
+
+          ret = ActiveRecord::Result.new(@connection.column_list_of_names, result, @connection.data_types)
+          result.clear
+          return ret
+        end
+      end
+
       # Ingres supports a different SQL syntax for column type definitions
       # For example with other vendor DBMS engines it's possible to specify the
       # number of bytes in an integer column - e.g. INTEGER(3)
@@ -608,23 +629,23 @@ module ActiveRecord
         insert_sql(sql, name, pk, id_value, sequence_name)
       end
 
-      def execute(sql, name = nil) #:nodoc:
-        sql = add_ordering(sql)
+      #def execute(sql, name = nil) #:nodoc:
+      #  sql = add_ordering(sql)
 
-        # Ingres does not like UPDATE statements that have a sub-SELECT that uses
-        # an ORDER BY
-        if sql =~ /^UPDATE/i then
-          sql.gsub!(/( ORDER BY.*)\)/,")") if sql =~ /SELECT.*( ORDER BY.*)\)/i 
-        end
+      #  # Ingres does not like UPDATE statements that have a sub-SELECT that uses
+      #  # an ORDER BY
+      #  if sql =~ /^UPDATE/i then
+      #    sql.gsub!(/( ORDER BY.*)\)/,")") if sql =~ /SELECT.*( ORDER BY.*)\)/i 
+      #  end
 
-        begin
-          result = @connection.execute(sql)
-        rescue
-          puts "\nAn error occurred!\n"
-          print_exception()
-        end
-        return result
-      end
+      #  begin
+      #    result = @connection.execute(sql)
+      #  rescue
+      #    puts "\nAn error occurred!\n"
+      #    print_exception()
+      #  end
+      #  return result
+      #end
 
       def execute_with_result_set(sql, name = nil) #:nodoc:
         sql = add_ordering(sql)
@@ -855,6 +876,16 @@ module ActiveRecord
 
       private
 
+      #def exec_no_cache(sql, binds)
+      #  @connection.execute(sql)
+      #end
+
+      #def exec_cache(sql, binds)
+      #  begin
+      #    stmt_key = prepare_statement sql
+      #  end
+      #end
+
       def connect
         @connection = Ingres.new
 
@@ -874,28 +905,36 @@ module ActiveRecord
         # Dummy function to execute further configuration on connection
       end
 
+      # Get the last generate identity/auto_increment/sequence number generated
+      # for a given table
+      def last_insert_id(table)
+        r = exec_query("SELECT max(#{primary_key(table)}) FROM #{table}")
+        Integer(r.first.first)
+      end
+
       def select(sql, name = nil, binds = [])
-        sql = translate_sql(sql)
-        results = execute_with_result_set(sql, name)
+        exec_query(sql, name, binds).to_a
+        #sql = translate_sql(sql)
+        #results = execute_with_result_set(sql, name)
 
-        rows = []
-        counter = 0
-        if (@connection.rows_affected)
-          results.each do |row|  # loop through result rows
-            hashed_row = {}
+        #rows = []
+        #counter = 0
+        #if (@connection.rows_affected)
+        #  results.each do |row|  # loop through result rows
+        #    hashed_row = {}
 
-            row.each_pair do |key, value|
-              hashed_row[key] = value unless key == "id"
-            end
-            rows << hashed_row
-          end
-        end
+        #    row.each_pair do |key, value|
+        #      hashed_row[key] = value unless key == "id"
+        #    end
+        #    rows << hashed_row
+        #  end
+        #end
 
-        rows
+        #rows
       end
 
       def column_definitions(table_name)
-        execute_without_adding_ordering(<<-end_sql, 'SCHEMA')
+        exec_query(<<-end_sql, 'SCHEMA')
           SELECT column_name, column_datatype, column_default_val
           FROM iicolumns
           WHERE table_name='#{table_name}'
@@ -1054,20 +1093,6 @@ module ActiveRecord
         end
         #puts "\n sql coming exiting is:\n#{sql}\n\n"
         sql
-      end
-
-      # Get the last generate identity/auto_increment/sequence number generated
-      # for a given table
-      def last_identity_for_table(table)
-        if table != nil then
-          identity_col = primary_key(table)
-          sql = "SELECT max(#{identity_col}) "
-          sql << "FROM #{table}"
-          last_identity = @connection.execute(sql)[0][0]
-        else
-          last_identity = 0
-        end
-        last_identity
       end
 
       def next_identity_for_table(table)
