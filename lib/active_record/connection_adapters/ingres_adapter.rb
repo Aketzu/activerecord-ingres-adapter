@@ -150,7 +150,7 @@ module ActiveRecord
     #
     class IngresAdapter < AbstractAdapter
 
-      ADAPTER_NAME = 'Ingres'
+      ADAPTER_NAME = 'Ingres'.freeze
 
       NATIVE_DATABASE_TYPES = {
         :primary_key => "integer NOT NULL PRIMARY KEY",
@@ -165,7 +165,23 @@ module ActiveRecord
         :binary      => { :name => "blob" },
         :boolean     => { :name => "tinyint" },
         :decimal     => { :name => "decimal" }
-      }
+      }.freeze
+
+      PARAMETERS_TYPES = {
+        "byte"         => "b",
+        "long_byte"    => "B",
+        "char"         => "c",
+        "date"         => "d",
+        "decimal"      => "D",
+        "float"        => "f",
+        "integer"      => "i",
+        "nchar"        => "n",
+        "nvarchar"     => "N",
+        "text"         => "t",
+        "long_text"    => "T",
+        "varchar"      => "v",
+        "long_varchar" => "V",
+      }.freeze
 
       def adapter_name
         ADAPTER_NAME
@@ -273,7 +289,7 @@ module ActiveRecord
           #result = binds.empty? ? exec_no_cache(sql, binds) :
           #                        exec_cache(sql, binds)
           result = binds.empty? ? @connection.execute(sql) :
-                                  @connection.execute(sql, binds)
+                                  @connection.execute(sql, *binds.each { |bind| bind[0] = PARAMETERS_TYPES[columns.find { |c| c.name == bind[0] }.sql_type.downcase] }.flatten)
 
           if @connection.rows_affected
             ActiveRecord::Result.new(@connection.column_list_of_names, result)
