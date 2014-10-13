@@ -5,24 +5,45 @@ module Arel
 
       def visit_Arel_Nodes_SelectStatement o, collector
         collector << "SELECT "
+        collector = maybe_visit o.limit, collector
 
-        if o.limit
-          collector << "FIRST #{o.limit} "
+        collector = o.cores.inject(collector) { |c,x|
+          visit_Arel_Nodes_SelectCore(x, c)
+        }
+
+        if o.orders.any?
+          collector << "ORDER BY "
+          collector = inject_join o.orders, collector, ", "
         end
 
-        visit o.relation, collector
+        collector = maybe_visit o.offset, collector
+      end
 
-        unless o.wheres.empty?
+      def visit_Arel_Nodes_SelectCore o, collector
+        collector = inject_join o.projections, collector, ", "
+
+        if o.source && !o.source.empty?
+          collector << " FROM "
+          collector = visit o.source, collector
+        end
+
+        if o.wheres.any?
           collector << " WHERE "
-          collector = inject_join o.wheres, collector, ' AND '
+          collector = inject_join o.wheres, collector, " AND "
         end
 
-        unless o.orders.empty?
-          collector << " ORDER BY "
-          collector = inject_join o.orders, collector, ', '
+        if o.groups.any?
+          collector << "GROUP BY "
+          collector = inject_join o.groups, collector, ", "
         end
 
-        collector
+        maybe_visit o.having, collector
+      end
+
+      def visit_Arel_Nodes_Limit o, collector
+        collector << "FIRST "
+        visit o.expr, collector
+        collector << " "
       end
     end
   end
