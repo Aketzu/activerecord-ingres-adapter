@@ -2,48 +2,28 @@ module Arel
   module Visitors
     class Ingres < Arel::Visitors::ToSql
       private
-
-      def visit_Arel_Nodes_SelectStatement o, collector
-        collector << "SELECT "
-        collector = maybe_visit o.limit, collector
-
-        collector = o.cores.inject(collector) { |c,x|
-          visit_Arel_Nodes_SelectCore(x, c)
-        }
-
-        if o.orders.any?
-          collector << "ORDER BY "
-          collector = inject_join o.orders, collector, ", "
-        end
-
-        collector = maybe_visit o.offset, collector
+      def visit_Arel_Nodes_SelectStatement o
+        [
+          "SELECT",
+          (visit(o.limit) if o.limit),
+          o.cores.map { |x| visit_Arel_Nodes_SelectCore x }.join,
+          ("ORDER BY #{o.orders.map { |x| visit x}.join(', ')}" unless o.orders.empty?),
+          (visit(o.offset) if o.offset),
+        ].compact.join ' '
       end
 
-      def visit_Arel_Nodes_SelectCore o, collector
-        collector = inject_join o.projections, collector, ", "
-
-        if o.source && !o.source.empty?
-          collector << " FROM "
-          collector = visit o.source, collector
-        end
-
-        if o.wheres.any?
-          collector << " WHERE "
-          collector = inject_join o.wheres, collector, " AND "
-        end
-
-        if o.groups.any?
-          collector << "GROUP BY "
-          collector = inject_join o.groups, collector, ", "
-        end
-
-        maybe_visit o.having, collector
+      def visit_Arel_Nodes_SelectCore o
+        [
+          "#{o.projections.map { |x| visit x }.join ', '}",
+          ("FROM #{visit(o.source)}" if o.source && !o.source.empty?),
+          ("WHERE #{o.wheres.map { |x| visit x }.join ' AND ' }" unless o.wheres.empty?),
+          ("GROUP BY #{o.groups.map { |x| visit x }.join ', ' }" unless o.groups.empty?),
+          (visit(o.having) if o.having),
+        ].compact.join ' '
       end
 
-      def visit_Arel_Nodes_Limit o, collector
-        collector << "FIRST "
-        visit o.expr, collector
-        collector << " "
+      def visit_Arel_Nodes_Limit o
+        "FIRST #{visit o.expr}"
       end
     end
   end
