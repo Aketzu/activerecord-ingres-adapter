@@ -681,7 +681,7 @@ module ActiveRecord
       end
 
       def select(sql, name = nil, binds = [])
-        exec_query(sql, name, binds).to_a
+        exec_query(sql, name, binds)
       end
 
       def column_definitions(table_name)

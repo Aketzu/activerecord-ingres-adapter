@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name = "activerecord-ingres-adapter"
-  s.version = "4.0.0"
+  s.version = "4.0.1"
   s.summary = "ActiveRecord Ingres Adapter"
   s.email = "felix.bellanger@gmail.com"
   s.homepage = "https://github.com/Keeguon/activerecord-ingres-adapter"
