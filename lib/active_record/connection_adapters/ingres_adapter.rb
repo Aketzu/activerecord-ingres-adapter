@@ -289,7 +289,7 @@ module ActiveRecord
           #result = binds.empty? ? exec_no_cache(sql, binds) :
           #                        exec_cache(sql, binds)
           result = binds.empty? ? @connection.execute(sql) :
-                                  @connection.execute(sql, *binds.each { |bind| bind[0] = PARAMETERS_TYPES[columns.find { |c| c.name == bind[0] }.sql_type.downcase] }.flatten)
+                                  @connection.execute(sql, *binds.map { |bind| [PARAMETERS_TYPES[bind[0].sql_type.downcase], bind[1]] }.flatten)
 
           if @connection.rows_affected
             ActiveRecord::Result.new(@connection.column_list_of_names, result)
@@ -933,23 +933,6 @@ module ActiveRecord
 
       def select(sql, name = nil, binds = [])
         exec_query(sql, name, binds).to_a
-        #sql = translate_sql(sql)
-        #results = execute_with_result_set(sql, name)
-
-        #rows = []
-        #counter = 0
-        #if (@connection.rows_affected)
-        #  results.each do |row|  # loop through result rows
-        #    hashed_row = {}
-
-        #    row.each_pair do |key, value|
-        #      hashed_row[key] = value unless key == "id"
-        #    end
-        #    rows << hashed_row
-        #  end
-        #end
-
-        #rows
       end
 
       def column_definitions(table_name)
