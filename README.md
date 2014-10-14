@@ -47,7 +47,7 @@ required:
 
 I maintain compatibility for Rails 3.2.x and Arel 3 in the 3-0-stable branch. Using rubygems you can do:
 
-    $ gem install activerecord-ingres-adapter -v 3.0.0
+    $ gem install activerecord-ingres-adapter -v 3.0.1
 
 ### Rails 4
 

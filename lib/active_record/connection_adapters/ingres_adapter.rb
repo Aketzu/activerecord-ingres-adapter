@@ -288,6 +288,8 @@ module ActiveRecord
       end
 
       def exec_query(sql, name = 'SQL', binds = [])
+        clear_cache! #small hack to avoid some descriptor error on the DB side
+
         log(sql, name, binds) do
           #TODO Aiming to do prepared statements but we'll have to do changes to the C API
           #result = binds.empty? ? exec_no_cache(sql, binds) :
