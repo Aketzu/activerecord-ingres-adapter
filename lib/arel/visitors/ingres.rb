@@ -8,7 +8,7 @@ module Arel
           (visit(o.limit, a) if o.limit),
           o.cores.map { |x| visit_Arel_Nodes_SelectCore x, a }.join,
           ("ORDER BY #{o.orders.map { |x| visit x, a }.join(', ')}" unless o.orders.empty?),
-          (visit(o.offset a) if o.offset),
+          (visit(o.offset, a) if o.offset),
         ].compact.join ' '
       end
 
