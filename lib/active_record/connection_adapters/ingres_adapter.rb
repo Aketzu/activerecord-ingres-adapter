@@ -296,6 +296,15 @@ module ActiveRecord
                                   @connection.execute(sql, *binds.map { |bind| [PARAMETERS_TYPES[bind[0].sql_type.downcase], bind[1]] }.flatten)
 
           if @connection.rows_affected
+            # Dirty hack for ASCII-8BIT strings
+            result.each do |row|
+              row.each_with_index do |column, index|
+                if String === column && column.encoding == Encoding::ASCII_8BIT
+                  row[index] = column.unpack("C*").pack("U*")
+                end
+              end
+            end
+
             ActiveRecord::Result.new(@connection.column_list_of_names, result)
           else
             ActiveRecord::Result.new([], [])
