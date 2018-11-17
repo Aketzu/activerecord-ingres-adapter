@@ -3422,7 +3422,7 @@ ii_crash_it (VALUE param_self) //:nodoc
   a_string = rb_str_new2 (my_string);
 
   printf ("Now convert it to a C string\n");
-  another_string = STR2CSTR (a_string);
+  another_string = StringValuePtr (a_string);
 
   printf ("Now convert it back to a Ruby string\n");
   yet_another_string = rb_str_new2 (another_string);
