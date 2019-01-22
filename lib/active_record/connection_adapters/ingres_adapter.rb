@@ -1,7 +1,6 @@
 require 'active_record/connection_adapters/abstract_adapter'
 require 'active_support/core_ext/object/blank'
 require 'active_record/connection_adapters/statement_pool'
-require 'arel/visitors/bind_visitor'
 
 module ActiveRecord
   class Base
@@ -155,10 +154,6 @@ module ActiveRecord
         def cache
           @cache[$$]
         end
-      end
-
-      class BindSubstitution < Arel::Visitors::Ingres # :nodoc:
-        include Arel::Visitors::BindVisitor
       end
 
       def initialize(connection, logger, connection_parameters, config)
